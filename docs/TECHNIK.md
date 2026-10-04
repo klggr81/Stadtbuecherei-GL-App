@@ -64,22 +64,31 @@ Layout und Modulnummern überstehen — aber eine Garantie ist das nicht.
 ## Benachrichtigungen
 
 Ein WorkManager-Job ([`DueDateWorker.kt`](https://github.com/daGrue11/Stadtbuecherei-GL-App/blob/main/app/src/main/java/de/bibgl/konto/work/DueDateWorker.kt))
-lädt einmal täglich gegen 9 Uhr — nur mit Netz — jedes hinterlegte Konto und
-prüft zwei Dinge. Die Regeln selbst stehen in
+lädt einmal täglich — nur mit Netz — jedes hinterlegte Konto und prüft zwei
+Dinge. Die Regeln selbst stehen in
 [`Notifications.kt`](https://github.com/daGrue11/Stadtbuecherei-GL-App/blob/main/app/src/main/java/de/bibgl/konto/work/Notifications.kt):
 
 - **Rückgabe-Erinnerung:** Medien, die innerhalb der eingestellten Tage
   (1–14, Standard 5) fällig oder schon überfällig sind. Höchstens eine Meldung
   pro Konto und Tag.
-- **Ausweisablauf:** ab 30 Tagen vor Ablauf, auch nach Ablauf. Höchstens eine
-  Meldung pro Konto und Woche. Der rote Hinweis in der App erscheint schon ab
-  60 Tagen.
+- **Ausweisablauf:** 30, 14 und 7 Tage vor Ablauf sowie am Ablauftag, jeweils
+  nur einmal. War das Handy an einem dieser Tage aus oder ohne Netz, kommt die
+  Meldung am nächsten Tag nach. Nach dem Ablauf kommt keine Meldung mehr. Der
+  rote Hinweis in der App erscheint schon ab 60 Tagen.
+
+**Uhrzeit:** Meldungen kommen frühestens um 9 Uhr und nie nachts. WorkManager
+garantiert keine feste Uhrzeit — ein Tagesrhythmus verschiebt sich, und ohne Netz
+würde er den Lauf auch nachts nachholen. Deshalb läuft der Job stündlich, prüft
+aber nur zwischen 9 und 20 Uhr und jedes Konto höchstens einmal pro Tag; die
+übrigen Läufe enden sofort ohne Netzzugriff. Normalerweise kommt die Meldung also
+kurz nach 9 Uhr; ist dann kein Netz da, beim nächsten stündlichen Versuch bis
+20 Uhr, sonst am nächsten Morgen.
 
 Jedes Konto hat eigene Meldungen, die sich nicht gegenseitig überschreiben; bei
 mehreren Konten steht der Kontoname im Titel. Antippen öffnet die App direkt beim
-betroffenen Konto. Scheitert das Laden eines Kontos, versucht WorkManager es
-später erneut — die übrigen Konten werden trotzdem geprüft. Abschalten lässt sich
-alles in den Einstellungen der App oder im System.
+betroffenen Konto. Scheitert das Laden eines Kontos, versucht es der nächste
+stündliche Lauf erneut — die übrigen Konten werden trotzdem geprüft. Abschalten
+lässt sich alles in den Einstellungen der App oder im System.
 
 ## Technik
 
@@ -108,19 +117,34 @@ Der APK läuft, kann aber keine offizielle Version aus den Releases überschreib
 
 ### Eine Version veröffentlichen
 
+Versionsnummern folgen [Semantic Versioning](https://semver.org/lang/de/) mit
+immer drei Stellen (`MAJOR.MINOR.PATCH`): Fehlerbehebung → `1.8.1`, neue
+Funktion → `1.9.0`, inkompatible Änderung → `2.0.0`. Was sich geändert hat,
+steht für Nutzer in [`CHANGELOG.md`](../CHANGELOG.md); Änderungen sammeln sich
+dort unter `[Unreleased]`.
+
 1. `versionCode` und `versionName` in [`app/build.gradle.kts`](../app/build.gradle.kts)
    erhöhen. `versionCode` muss streng steigen, sonst verweigert Android das Update.
-2. Änderungen committen und pushen.
-3. Passenden Tag setzen:
+2. In `CHANGELOG.md` `## [Unreleased]` in `## [1.8.1] - JJJJ-MM-TT` umbenennen,
+   darüber ein neues, leeres `## [Unreleased]` anlegen und unten die
+   Vergleichslinks ergänzen.
+3. Committen (`Release 1.8.1`) und pushen.
+4. Annotierten Tag setzen und pushen:
 
 ```bash
-git tag v1.8
-git push origin v1.8
+git tag -a v1.8.1 -m "Stadtbücherei-GL-App 1.8.1"
+git push origin v1.8.1
 ```
 
-Der Tag-Push baut den APK und legt den GitHub-Release samt Datei an. Ein
-Vorab-Check bricht ab, wenn der Tag nicht zum `versionName` im Build passt —
-sonst driften Dateiname und tatsächliche App-Version auseinander.
+Der Tag-Push baut den APK und legt den GitHub-Release samt Datei an. Die
+Release-Notes kommen aus dem passenden Abschnitt in `CHANGELOG.md`. Vorab-Checks
+brechen ab, wenn der Tag nicht zum `versionName` im Build passt, keine drei
+Stellen hat oder der Changelog-Abschnitt fehlt — sonst driften Dateiname,
+App-Version und Beschreibung auseinander.
+
+Bereits veröffentlichte Versionen werden nie nachträglich geändert; ein Fehler
+in 1.8.1 wird mit 1.8.2 behoben. Die Tags `v1.3` bis `v1.8` stammen aus der Zeit
+vor dieser Regel und haben nur zwei Stellen.
 
 > Nur Release-Dateien sind ohne GitHub-Login herunterladbar. Die Artefakte eines
 > normalen Builds sind es nicht — deshalb der Umweg über Tags.

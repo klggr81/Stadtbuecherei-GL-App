@@ -544,34 +544,46 @@ private fun SummaryCard(account: Account, today: LocalDate) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
+            // Die naechste Frist ist das Wichtigste auf der Karte und steht deshalb
+            // gross oben; die Gebuehren folgen klein darunter.
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 Stat("Ausgeliehen", account.loans.size.toString())
-                Stat(
-                    "Offene Gebühren",
-                    account.fees.open,
-                    highlight = account.fees.hasOpenFees,
-                )
+                if (next != null) {
+                    val days = next.daysLeft(today)
+                    Column(Modifier.weight(1f)) {
+                        Stat(
+                            "Nächste Rückgabe",
+                            countdownLabel(days),
+                            valueColor = countdownColor(days),
+                        )
+                        Text(
+                            next.title,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 2.dp),
+                        )
+                    }
+                }
             }
 
-            if (next != null) {
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "Nächste Rückgabe",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    CountdownChip(next, today)
-                }
+            Spacer(Modifier.height(16.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(12.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    next.title,
+                    "Offene Gebühren",
                     style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    modifier = Modifier.padding(top = 4.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    account.fees.open,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (account.fees.hasOpenFees) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurface,
                 )
             }
 
@@ -599,7 +611,11 @@ private fun SummaryCard(account: Account, today: LocalDate) {
 }
 
 @Composable
-private fun Stat(label: String, value: String, highlight: Boolean = false) {
+private fun Stat(
+    label: String,
+    value: String,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
+) {
     Column {
         Text(
             label,
@@ -609,8 +625,7 @@ private fun Stat(label: String, value: String, highlight: Boolean = false) {
         Text(
             value,
             style = MaterialTheme.typography.titleLarge,
-            color = if (highlight) MaterialTheme.colorScheme.error
-            else MaterialTheme.colorScheme.onSurface,
+            color = valueColor,
         )
     }
 }
@@ -758,23 +773,9 @@ private fun RenewRow(loan: Loan, busy: Boolean, onRenew: () -> Unit) {
 @Composable
 private fun CountdownChip(loan: Loan, today: LocalDate) {
     val days: Long? = loan.daysLeft(today)
-    val dark = MaterialTheme.colorScheme.surface.luminanceIsDark()
-    val color = when {
-        days == null -> MaterialTheme.colorScheme.onSurfaceVariant
-        days < 0L -> if (dark) DueColors.overdueDark else DueColors.overdue
-        days <= 2L -> if (dark) DueColors.urgentDark else DueColors.urgent
-        days <= 7L -> if (dark) DueColors.soonDark else DueColors.soon
-        else -> if (dark) DueColors.okDark else DueColors.ok
-    }
-    val label = when {
-        days == null -> "ohne Frist"
-        days < 0L -> "${-days} ${dayWord(-days)} überfällig"
-        days == 0L -> "heute fällig"
-        days == 1L -> "morgen fällig"
-        else -> "noch $days Tage"
-    }
+    val color = countdownColor(days)
     Text(
-        label,
+        countdownLabel(days),
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.SemiBold,
         color = color,
@@ -783,6 +784,27 @@ private fun CountdownChip(loan: Loan, today: LocalDate) {
             .background(color.copy(alpha = 0.12f))
             .padding(horizontal = 8.dp, vertical = 3.dp),
     )
+}
+
+/** Ampelfarbe der Frist: rot ueberfaellig, orange <= 2 Tage, gelb <= 7, sonst gruen. */
+@Composable
+private fun countdownColor(days: Long?): Color {
+    val dark = MaterialTheme.colorScheme.surface.luminanceIsDark()
+    return when {
+        days == null -> MaterialTheme.colorScheme.onSurfaceVariant
+        days < 0L -> if (dark) DueColors.overdueDark else DueColors.overdue
+        days <= 2L -> if (dark) DueColors.urgentDark else DueColors.urgent
+        days <= 7L -> if (dark) DueColors.soonDark else DueColors.soon
+        else -> if (dark) DueColors.okDark else DueColors.ok
+    }
+}
+
+private fun countdownLabel(days: Long?): String = when {
+    days == null -> "ohne Frist"
+    days < 0L -> "${-days} ${dayWord(-days)} überfällig"
+    days == 0L -> "heute fällig"
+    days == 1L -> "morgen fällig"
+    else -> "noch $days Tage"
 }
 
 private fun dayWord(n: Long) = if (n == 1L) "Tag" else "Tage"

@@ -26,8 +26,8 @@ Frist abläuft.
 | **Gebühren** | Offene Gebühren, Einzahlungen, Saldo, Einzelposten |
 | **Vormerkungen** | Vorbestellte Medien und was gerade abholbereit ist |
 | **Merkliste** | Gemerkte Titel (bis zu 20, bei mehr ein Hinweis mit Link zur Website), Antippen öffnet die Detailseite, Entfernen per Lesezeichen-Symbol |
-| **Ausweis** | Hinweis in der App ab 60 Tagen vor Ablauf, Benachrichtigung ab 30 Tagen (einmal pro Woche) |
-| **Erinnerungen** | Täglicher Hintergrund-Check, Benachrichtigung einstellbar: 1–14 Tage vor Fristende |
+| **Ausweis** | Hinweis in der App ab 60 Tagen vor Ablauf, Benachrichtigung 30, 14 und 7 Tage vorher sowie am Ablauftag |
+| **Erinnerungen** | Täglicher Hintergrund-Check, Benachrichtigung einstellbar: 1–14 Tage vor Fristende. Alle Meldungen kommen frühestens um 9 Uhr, nie nachts |
 | **Mehrere Ausweise** | Konto-Umschalter in der Titelleiste, jedes Konto mit eigener Vorschau und eigenen Erinnerungen |
 
 Ohne Netz zeigt die App den zuletzt geladenen Stand, damit die Fristen auch

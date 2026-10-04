@@ -56,7 +56,7 @@ object Notifications {
 
     /**
      * Meldet faellige und ueberfaellige Medien eines Ausweises. Liefert true,
-     * wenn etwas gemeldet wurde - der Worker merkt sich dann den Tag.
+     * wenn etwas gemeldet wurde.
      *
      * @param showProfile blendet den Kontonamen ein; bei nur einem hinterlegten
      *   Ausweis waere er ueberfluessiges Rauschen.
@@ -112,8 +112,8 @@ object Notifications {
     }
 
     /**
-     * Warnt, wenn ein Bibliotheksausweis in den naechsten 30 Tagen ablaeuft.
-     * Liefert true, wenn gewarnt wurde - der Worker merkt sich dann den Tag.
+     * Warnt, dass ein Bibliotheksausweis bald oder heute ablaeuft. An welchen
+     * Tagen das geschieht, entscheidet der Worker. Liefert true, wenn gewarnt wurde.
      */
     fun notifyCardExpiry(
         context: Context,
@@ -122,10 +122,10 @@ object Notifications {
         showProfile: Boolean,
     ): Boolean {
         val days = account.cardDaysLeft() ?: return false
-        if (days > 30 || !canNotify(context)) return false
+        if (days < 0 || !canNotify(context)) return false
         val who = if (showProfile) "Der Ausweis von ${profile.label}" else "Dein Bibliotheksausweis"
-        val text = if (days < 0) {
-            "$who ist seit ${-days} ${dayWord(-days)} abgelaufen."
+        val text = if (days == 0L) {
+            "$who läuft heute ab (${account.cardValidUntilRaw})."
         } else {
             "$who läuft in $days ${dayWord(days)} ab (${account.cardValidUntilRaw})."
         }

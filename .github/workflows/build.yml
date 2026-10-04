@@ -52,7 +52,34 @@ jobs:
             echo "::error::Tag v$TAG passt nicht zu versionName \"$BUILD\" in app/build.gradle.kts."
             exit 1
           fi
+          # Ab 1.8.1 immer drei Stellen (Semantic Versioning).
+          if ! echo "$TAG" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version $TAG hat nicht das Format MAJOR.MINOR.PATCH (z.B. 1.8.1)."
+            exit 1
+          fi
           echo "Tag v$TAG passt zu versionName $BUILD."
+
+      # Die Release-Notes kommen aus dem Abschnitt dieser Version in CHANGELOG.md.
+      # Fehlt er, bricht der Build ab - sonst gaebe es ein Release ohne Beschreibung.
+      - name: Release-Notes aus dem Changelog holen
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v head="## [$VERSION]" '
+            index($0, head) == 1 { found = 1; next }
+            found && (/^## \[/ || /^\[[^]]*\]: /) { exit }
+            found { print }
+          ' CHANGELOG.md | sed -e '/./,$!d' > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::Kein Abschnitt \"## [$VERSION]\" in CHANGELOG.md."
+            exit 1
+          fi
+          {
+            echo
+            echo '---'
+            echo 'Installationsanleitung und Hinweise siehe README im Repository.'
+          } >> release-notes.md
+          cat release-notes.md
 
       - name: Gradle einrichten
         uses: gradle/actions/setup-gradle@v5
@@ -84,7 +111,7 @@ jobs:
           path: ${{ steps.apk.outputs.name }}
           if-no-files-found: error
 
-      # Nur bei einem Tag wie v1.2: veroeffentlicht den APK als Release-Datei.
+      # Nur bei einem Tag wie v1.8.1: veroeffentlicht den APK als Release-Datei.
       # Nur die ist ohne GitHub-Login herunterladbar - Artefakte sind es nicht.
       - name: Release veröffentlichen
         if: startsWith(github.ref, 'refs/tags/v')
@@ -93,5 +120,5 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" "${{ steps.apk.outputs.name }}" \
             --title "Stadtbücherei-GL-App $GITHUB_REF_NAME" \
-            --notes "Installationsanleitung und Hinweise siehe README im Repository." \
+            --notes-file release-notes.md \
             --latest

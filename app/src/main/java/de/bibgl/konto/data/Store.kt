@@ -38,7 +38,7 @@ class Store(private val context: Context) {
         private fun kLabel(id: String) = "profile_label_$id"
         private fun kAccount(id: String) = "account_cache_$id"
         private fun kNotified(id: String) = "last_notified_$id"
-        private fun kCardNotified(id: String) = "last_card_notified_$id"
+        private fun kCardStage(id: String) = "card_reminder_stage_$id"
         private fun kUser(id: String) = "user_$id"
         private fun kPass(id: String) = "pass_$id"
 
@@ -170,7 +170,7 @@ class Store(private val context: Context) {
             .remove(kLabel(id))
             .remove(kAccount(id))
             .remove(kNotified(id))
-            .remove(kCardNotified(id))
+            .remove(kCardStage(id))
             .apply()
         val remaining = profileIds - id
         profileIds = remaining
@@ -206,18 +206,29 @@ class Store(private val context: Context) {
         get() = plain.getBoolean(K_NOTIFY, true)
         set(value) = plain.edit().putBoolean(K_NOTIFY, value).apply()
 
-    /** Tag der letzten Erinnerung je Profil (epochDay), damit hoechstens einmal taeglich. */
-    fun lastNotifiedDay(id: String): Long = plain.getLong(kNotified(id), 0L)
+    /**
+     * Tag der letzten erfolgreichen Pruefung je Profil (epochDay), damit der
+     * stuendliche Job jedes Konto hoechstens einmal taeglich laedt und meldet.
+     */
+    fun lastCheckedDay(id: String): Long = plain.getLong(kNotified(id), 0L)
 
-    fun setLastNotifiedDay(id: String, day: Long) {
+    fun setLastCheckedDay(id: String, day: Long) {
         plain.edit().putLong(kNotified(id), day).apply()
     }
 
-    /** Tag der letzten Warnung zum Ausweisablauf je Profil (epochDay), fuer den Wochenrhythmus. */
-    fun lastCardNotifiedDay(id: String): Long = plain.getLong(kCardNotified(id), 0L)
+    /**
+     * Zuletzt gemeldeter Stichtag zum Ausweisablauf (30, 14, 7, 0) je Profil.
+     * Gilt nur fuer das angegebene Ablaufdatum - nach einer Verlaengerung des
+     * Ausweises beginnt die Zaehlung neu.
+     */
+    fun cardReminderStage(id: String, validUntil: String): Int? {
+        val saved = plain.getString(kCardStage(id), null) ?: return null
+        val date = saved.substringBeforeLast('|')
+        return if (date == validUntil) saved.substringAfterLast('|').toIntOrNull() else null
+    }
 
-    fun setLastCardNotifiedDay(id: String, day: Long) {
-        plain.edit().putLong(kCardNotified(id), day).apply()
+    fun setCardReminderStage(id: String, validUntil: String, stage: Int) {
+        plain.edit().putString(kCardStage(id), "$validUntil|$stage").apply()
     }
 
     // ------------------------------------------------------------------ Cache
