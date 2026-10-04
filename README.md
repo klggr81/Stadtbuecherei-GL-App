@@ -16,6 +16,47 @@ Frist abläuft.
 |:---:|:---:|:---:|
 | <img src="docs/screenshots/01-ausleihen.jpg" width="240" alt="Liste ausgeliehener Medien mit Countdown bis zur Rückgabe"> | <img src="docs/screenshots/02-konto-hinzufuegen.jpg" width="240" alt="Anmeldung mit Ausweisnummer und Passwort"> | <img src="docs/screenshots/03-einstellungen.jpg" width="240" alt="Einstellungen für Erinnerungen"> |
 
+
+## Installation
+
+### Empfohlen: mit Obtainium
+
+[<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="54">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/klggr81/Stadtbuecherei-GL-App)
+
+[Obtainium](https://github.com/ImranR98/Obtainium) installiert Apps direkt aus
+GitHub-Releases und meldet neue Versionen automatisch.
+
+1. Obtainium installieren (APK aus dessen
+   [Releases](https://github.com/ImranR98/Obtainium/releases/latest))
+2. Auf dem Handy den Badge oben antippen, alternativ in Obtainium *App
+   hinzufügen* → `https://github.com/klggr81/Stadtbuecherei-GL-App`
+3. *Installieren* antippen — Updates kommen künftig über Obtainium
+
+### Manuell
+
+1. **[APK herunterladen](https://github.com/klggr81/Stadtbuecherei-GL-App/releases/latest)** — unter *Assets* die Datei
+   `Stadtbuecherei-GL-App-*.apk` antippen
+2. Die Datei auf dem Android-Gerät öffnen
+3. Android fragt, ob Apps aus dieser Quelle installiert werden dürfen → erlauben
+4. Installieren, App öffnen, Ausweisnummer und Passwort der Stadtbücherei eingeben
+
+Für spätere Versionen einfach den neuen APK installieren. Es wird als Update installiert. Die gespeicherten Konten bleiben erhalten.
+
+> **Android wird abgeschottet.** Google verlangt künftig, dass sich die Entwickler
+> *jeder* App bei Google registrieren — auch von Apps, die wie diese außerhalb
+> des Play Stores installiert werden. Seit dem 30.09.2026 gilt das in ersten
+> Ländern, weltweit soll es bis 2027 folgen. Kleine, freie Projekte wie dieses
+> lassen sich dann nur noch umständlich oder gar nicht mehr installieren. Mehr
+> dazu und wie man sich dagegen einsetzen kann: **[keepandroidopen.org](https://keepandroidopen.org/)**
+
+### Voraussetzungen
+
+- Android 8.0 oder neuer
+- Ein gültiger Bibliotheksausweis der Stadtbücherei Bergisch Gladbach
+
+**Getestet wurde ausschließlich unter Android 17 auf einem Pixel 10.** Ältere
+Versionen sollten funktionieren, sind aber nicht ausprobiert.
+
 ## Was die App kann
 
 | Funktion | Details |
@@ -32,24 +73,6 @@ Frist abläuft.
 
 Ohne Netz zeigt die App den zuletzt geladenen Stand, damit die Fristen auch
 unterwegs sichtbar bleiben.
-
-## Installation
-
-1. **[APK herunterladen](https://github.com/daGrue11/Stadtbuecherei-GL-App/releases/latest)** — unter *Assets* die Datei
-   `Stadtbuecherei-GL-App-*.apk` antippen
-2. Die Datei auf dem Android-Gerät öffnen
-3. Android fragt, ob Apps aus dieser Quelle installiert werden dürfen → erlauben
-4. Installieren, App öffnen, Ausweisnummer und Passwort der Stadtbücherei eingeben
-
-Für spätere Versionen einfach den neuen APK installieren. Es wird als Update installiert. Die gespeicherten Konten bleiben erhalten.
-
-### Voraussetzungen
-
-- Android 8.0 oder neuer
-- Ein gültiger Bibliotheksausweis der Stadtbücherei Bergisch Gladbach
-
-**Getestet wurde ausschließlich unter Android 17 auf einem Pixel 10.** Ältere
-Versionen sollten funktionieren, sind aber nicht ausprobiert.
 
 ## Datenschutz
 

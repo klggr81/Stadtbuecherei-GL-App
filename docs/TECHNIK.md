@@ -10,7 +10,7 @@ das Auslesen der Bibliotheksseite funktioniert.
 Es wird kein Android Studio gebraucht — GitHub baut den APK:
 
 ```bash
-git clone https://github.com/daGrue11/Stadtbuecherei-GL-App.git
+git clone https://github.com/klggr81/Stadtbuecherei-GL-App.git
 cd Stadtbuecherei-GL-App
 ```
 
@@ -25,7 +25,7 @@ Mit Android Studio: Projektordner öffnen, Gradle synchronisieren, `Run`.
 
 Die Stadtbücherei nutzt **OCLC OPEN** auf DotNetNuke (ASP.NET WebForms). Eine
 offizielle Schnittstelle gibt es nicht, die App liest die Website aus. Das
-Wesentliche steckt in [`LibraryClient.kt`](https://github.com/daGrue11/Stadtbuecherei-GL-App/blob/main/app/src/main/java/de/bibgl/konto/data/LibraryClient.kt):
+Wesentliche steckt in [`LibraryClient.kt`](https://github.com/klggr81/Stadtbuecherei-GL-App/blob/main/app/src/main/java/de/bibgl/konto/data/LibraryClient.kt):
 
 - **Login** ist ein WebForms-Postback auf `/Login` mit `__VIEWSTATE` und
   `__EVENTVALIDATION` aus dem Formular.
@@ -63,10 +63,10 @@ Layout und Modulnummern überstehen — aber eine Garantie ist das nicht.
 
 ## Benachrichtigungen
 
-Ein WorkManager-Job ([`DueDateWorker.kt`](https://github.com/daGrue11/Stadtbuecherei-GL-App/blob/main/app/src/main/java/de/bibgl/konto/work/DueDateWorker.kt))
+Ein WorkManager-Job ([`DueDateWorker.kt`](https://github.com/klggr81/Stadtbuecherei-GL-App/blob/main/app/src/main/java/de/bibgl/konto/work/DueDateWorker.kt))
 lädt einmal täglich — nur mit Netz — jedes hinterlegte Konto und prüft zwei
 Dinge. Die Regeln selbst stehen in
-[`Notifications.kt`](https://github.com/daGrue11/Stadtbuecherei-GL-App/blob/main/app/src/main/java/de/bibgl/konto/work/Notifications.kt):
+[`Notifications.kt`](https://github.com/klggr81/Stadtbuecherei-GL-App/blob/main/app/src/main/java/de/bibgl/konto/work/Notifications.kt):
 
 - **Rückgabe-Erinnerung:** Medien, die innerhalb der eingestellten Tage
   (1–14, Standard 5) fällig oder schon überfällig sind. Höchstens eine Meldung

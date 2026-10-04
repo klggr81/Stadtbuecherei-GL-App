@@ -7,6 +7,12 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+## [1.8.2] - 2026-10-04
+
+### Geändert
+- Übersichtskarte: „Nächste Rückgabe“ steht jetzt links vor „Ausgeliehen“.
+- Link im Über-Dialog zeigt auf die neue Adresse des Repositorys.
+
 ## [1.8.1] - 2026-10-04
 
 ### Geändert
@@ -65,11 +71,12 @@ Erste veröffentlichte Version.
 - Mehrere Ausweise mit Konto-Umschalter.
 - Erinnerungen vor Fristende und Warnung vor Ausweisablauf.
 
-[Unreleased]: https://github.com/daGrue11/Stadtbuecherei-GL-App/compare/v1.8.1...HEAD
-[1.8.1]: https://github.com/daGrue11/Stadtbuecherei-GL-App/compare/v1.8...v1.8.1
-[1.8]: https://github.com/daGrue11/Stadtbuecherei-GL-App/compare/v1.7...v1.8
-[1.7]: https://github.com/daGrue11/Stadtbuecherei-GL-App/compare/v1.6...v1.7
-[1.6]: https://github.com/daGrue11/Stadtbuecherei-GL-App/compare/v1.5...v1.6
-[1.5]: https://github.com/daGrue11/Stadtbuecherei-GL-App/compare/v1.4...v1.5
-[1.4]: https://github.com/daGrue11/Stadtbuecherei-GL-App/compare/v1.3...v1.4
-[1.3]: https://github.com/daGrue11/Stadtbuecherei-GL-App/releases/tag/v1.3
+[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.8.2...HEAD
+[1.8.2]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.8.1...v1.8.2
+[1.8.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.8...v1.8.1
+[1.8]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.7...v1.8
+[1.7]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.6...v1.7
+[1.6]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.5...v1.6
+[1.5]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.4...v1.5
+[1.4]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.3...v1.4
+[1.3]: https://github.com/klggr81/Stadtbuecherei-GL-App/releases/tag/v1.3

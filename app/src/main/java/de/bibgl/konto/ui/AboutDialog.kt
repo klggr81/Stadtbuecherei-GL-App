@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import de.bibgl.konto.BuildConfig
 import de.bibgl.konto.R
 
-private const val REPO_URL = "https://github.com/daGrue11/Stadtbuecherei-GL-App"
+private const val REPO_URL = "https://github.com/klggr81/Stadtbuecherei-GL-App"
 private const val CONTACT_EMAIL = "info@klggr.de"
 
 @Composable

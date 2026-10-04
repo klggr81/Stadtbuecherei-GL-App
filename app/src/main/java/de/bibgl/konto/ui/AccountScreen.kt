@@ -545,10 +545,9 @@ private fun SummaryCard(account: Account, today: LocalDate) {
             )
 
             // Die naechste Frist ist das Wichtigste auf der Karte und steht deshalb
-            // gross oben; die Gebuehren folgen klein darunter.
+            // gross oben links; die Gebuehren folgen klein darunter.
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                Stat("Ausgeliehen", account.loans.size.toString())
                 if (next != null) {
                     val days = next.daysLeft(today)
                     Column(Modifier.weight(1f)) {
@@ -566,6 +565,7 @@ private fun SummaryCard(account: Account, today: LocalDate) {
                         )
                     }
                 }
+                Stat("Ausgeliehen", account.loans.size.toString())
             }
 
             Spacer(Modifier.height(16.dp))
