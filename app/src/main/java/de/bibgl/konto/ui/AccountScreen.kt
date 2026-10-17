@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -39,6 +39,7 @@ import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.DriveFileRenameOutline
+import androidx.compose.material.icons.outlined.LocalLibrary
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.Newspaper
@@ -71,9 +72,9 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,13 +85,18 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import coil.compose.AsyncImage
 import de.bibgl.konto.data.Account
 import de.bibgl.konto.data.LibraryClient
 import de.bibgl.konto.data.Loan
+import de.bibgl.konto.data.OpeningHours
 import de.bibgl.konto.data.Table
 import de.bibgl.konto.data.WatchItem
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,6 +115,7 @@ fun AccountScreen(
     onAddProfile: () -> Unit,
     onRenameProfile: (String, String) -> Unit,
     onRemoveProfile: (String) -> Unit,
+    onSectionToggled: (String, Boolean) -> Unit,
 ) {
     val snackbar = remember { SnackbarHostState() }
     var menuOpen by remember { mutableStateOf(false) }
@@ -289,11 +296,21 @@ fun AccountScreen(
                     onRenew = onRenew,
                     onRenewAll = onRenewAll,
                     onRemoveFromWatchlist = onRemoveFromWatchlist,
+                    onSectionToggled = onSectionToggled,
                 )
             }
         }
     }
 }
+
+// Schluessel der aufklappbaren Karten - werden im Store gemerkt, nicht umbenennen.
+private const val S_LOANS = "loans"
+private const val S_PICKUP = "pickup"
+private const val S_RESERVATIONS = "reservations"
+private const val S_FEES = "fees"
+private const val S_HOURS = "opening_hours"
+private const val S_WATCHLIST = "watchlist"
+private const val S_CARD = "library_card"
 
 @Composable
 private fun AccountContent(
@@ -302,9 +319,17 @@ private fun AccountContent(
     onRenew: (String) -> Unit,
     onRenewAll: () -> Unit,
     onRemoveFromWatchlist: (WatchItem) -> Unit,
+    onSectionToggled: (String, Boolean) -> Unit,
 ) {
     val today = LocalDate.now()
     val loans = account.loansByDueDate
+    val now = rememberNow()
+
+    // Jede Karte merkt sich, ob sie auf- oder zugeklappt ist. Solange der Nutzer
+    // sie nie angetippt hat, gilt der Standard der jeweiligen Karte.
+    fun expanded(key: String, default: Boolean) = state.expandedSections[key] ?: default
+    fun toggle(key: String, default: Boolean): () -> Unit =
+        { onSectionToggled(key, !expanded(key, default)) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -316,81 +341,120 @@ private fun AccountContent(
             item { ErrorBanner(error) }
         }
 
-        item { SummaryCard(account, today) }
+        item(key = "overview") { OverviewCard(account, today, now) }
 
-        if (loans.isNotEmpty()) {
-            item {
-                SectionHeader(
-                    icon = { Icon(Icons.Outlined.MenuBook, null) },
-                    title = "Ausgeliehen",
-                    count = loans.size,
-                )
+        if (!account.readyForPickup.isEmpty) {
+            item(key = S_PICKUP) {
+                CollapsibleCard(
+                    icon = Icons.Outlined.Inventory2,
+                    title = "Abholbereit",
+                    count = account.readyForPickup.rows.size,
+                    expanded = expanded(S_PICKUP, true),
+                    onToggle = toggle(S_PICKUP, true),
+                ) {
+                    TableContent(account.readyForPickup)
+                }
             }
-            items(loans, key = { it.copyId }) { loan ->
-                LoanCard(
-                    loan = loan,
-                    today = today,
-                    busy = loan.copyId in state.renewing,
-                    onRenew = { onRenew(loan.copyId) },
-                )
-            }
-            val renewable = account.renewableLoans
-            if (renewable.size > 1) {
-                item {
-                    FilledTonalButton(
-                        onClick = onRenewAll,
-                        enabled = state.renewing.isEmpty(),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Icon(Icons.Outlined.Autorenew, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Alle ${renewable.size} verlängerbaren verlängern")
+        }
+
+        item(key = S_LOANS) {
+            CollapsibleCard(
+                icon = Icons.Outlined.MenuBook,
+                title = "Ausgeliehen",
+                count = loans.size,
+                expanded = expanded(S_LOANS, true),
+                onToggle = toggle(S_LOANS, true),
+                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 8.dp),
+            ) {
+                if (loans.isEmpty()) {
+                    EmptyText("Nichts ausgeliehen", Modifier.padding(horizontal = 8.dp))
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        loans.forEach { loan ->
+                            key(loan.copyId) {
+                                LoanCard(
+                                    loan = loan,
+                                    today = today,
+                                    busy = loan.copyId in state.renewing,
+                                    onRenew = { onRenew(loan.copyId) },
+                                )
+                            }
+                        }
+                        val renewable = account.renewableLoans
+                        if (renewable.size > 1) {
+                            FilledTonalButton(
+                                onClick = onRenewAll,
+                                enabled = state.renewing.isEmpty(),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Icon(Icons.Outlined.Autorenew, null, Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Alle ${renewable.size} verlängerbaren verlängern")
+                            }
+                        }
                     }
                 }
             }
-        } else {
-            item { EmptyCard("Nichts ausgeliehen") }
-        }
-
-        if (!account.readyForPickup.isEmpty) {
-            item {
-                SectionHeader(
-                    icon = { Icon(Icons.Outlined.Inventory2, null) },
-                    title = "Abholbereit",
-                    count = account.readyForPickup.rows.size,
-                )
-            }
-            item { TableCard(account.readyForPickup) }
         }
 
         if (!account.reservations.isEmpty) {
-            item {
-                SectionHeader(
-                    icon = { Icon(Icons.Outlined.Schedule, null) },
+            item(key = S_RESERVATIONS) {
+                CollapsibleCard(
+                    icon = Icons.Outlined.Schedule,
                     title = "Vorgemerkt",
                     count = account.reservations.rows.size,
-                )
+                    expanded = expanded(S_RESERVATIONS, true),
+                    onToggle = toggle(S_RESERVATIONS, true),
+                ) {
+                    TableContent(account.reservations)
+                }
             }
-            item { TableCard(account.reservations) }
         }
-
-        item {
-            SectionHeader(
-                icon = { Icon(Icons.Outlined.Euro, null) },
-                title = "Gebühren",
-            )
-        }
-        item { FeesCard(account) }
 
         if (account.watchlist.isNotEmpty()) {
-            item {
+            item(key = S_WATCHLIST) {
                 WatchlistCard(
                     items = account.watchlist,
                     total = account.watchlistTotal,
                     removing = state.removingWatch,
                     onRemove = onRemoveFromWatchlist,
+                    expanded = expanded(S_WATCHLIST, false),
+                    onToggle = toggle(S_WATCHLIST, false),
                 )
             }
+        }
+
+        // Ohne offene Gebuehren ist die Karte uninteressant und startet zugeklappt.
+        val feesDefault = account.fees.hasOpenFees
+        item(key = S_FEES) {
+            CollapsibleCard(
+                icon = Icons.Outlined.Euro,
+                title = "Gebühren",
+                subtitle = "${account.fees.open} offen",
+                subtitleColor = if (account.fees.hasOpenFees) MaterialTheme.colorScheme.error
+                else null,
+                expanded = expanded(S_FEES, feesDefault),
+                onToggle = toggle(S_FEES, feesDefault),
+            ) {
+                FeesContent(account)
+            }
+        }
+
+        item(key = S_HOURS) {
+            OpeningHoursCard(
+                now = now,
+                expanded = expanded(S_HOURS, false),
+                onToggle = toggle(S_HOURS, false),
+            )
+        }
+
+        item(key = S_CARD) {
+            LibraryCardCard(
+                account = account,
+                today = today,
+                expanded = expanded(S_CARD, false),
+                onToggle = toggle(S_CARD, false),
+            )
         }
 
         item { FooterNote(account) }
@@ -528,21 +592,87 @@ private fun RenameDialog(
 
 // ------------------------------------------------------------------ Bausteine
 
+/** Name, Ausweisnummer und Gueltigkeit - laeuft der Ausweis bald ab, steht hier die Warnung. */
 @Composable
-private fun SummaryCard(account: Account, today: LocalDate) {
+private fun LibraryCardCard(
+    account: Account,
+    today: LocalDate,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+) {
+    val warn = cardExpiryWarning(account, today)
+    val validity = warn ?: account.cardValidUntil?.let { "gültig bis ${account.cardValidUntilRaw}" }
+    val validityColor = if (warn != null) MaterialTheme.colorScheme.error
+    else MaterialTheme.colorScheme.onSurfaceVariant
+
+    // Zugeklappt steht die Gueltigkeit im Kopf, damit eine Ablauf-Warnung nicht
+    // in der eingeklappten Karte verschwindet; aufgeklappt steht sie unter der Nummer.
+    CollapsibleCard(
+        icon = Icons.Outlined.CreditCard,
+        title = "Ausweis",
+        subtitle = if (expanded) null else validity ?: account.cardNumber,
+        subtitleColor = if (validity != null) validityColor else null,
+        expanded = expanded,
+        onToggle = onToggle,
+    ) {
+        if (account.patronName.isNotBlank()) {
+            Text(account.patronName, style = MaterialTheme.typography.titleMedium)
+        }
+        Text(
+            "Ausweis ${account.cardNumber}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (validity != null) {
+            Text(
+                validity,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (warn != null) FontWeight.SemiBold else FontWeight.Normal,
+                color = validityColor,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+    }
+}
+
+/**
+ * Warnung zum Ausweisablauf, erst ab 60 Tagen vorher - sonst ist es Rauschen.
+ * Null, solange kein Hinweis noetig ist.
+ */
+private fun cardExpiryWarning(account: Account, today: LocalDate): String? {
+    val days = account.cardDaysLeft(today) ?: return null
+    val date = account.cardValidUntilRaw
+    return when {
+        days > 60 -> null
+        days < 0 -> "Ausweis abgelaufen ($date)"
+        days == 0L -> "Ausweis läuft heute ab"
+        days == 1L -> "Ausweis läuft morgen ab ($date)"
+        else -> "Ausweis läuft in $days Tagen ab ($date)"
+    }
+}
+
+@Composable
+private fun OverviewCard(account: Account, today: LocalDate, now: LocalDateTime) {
     val next = account.loansByDueDate.firstOrNull()
-    val cardDays = account.cardDaysLeft(today)
+    val libraryStatus = OpeningHours.status(OpeningHours.main, now)
+    val cardWarning = cardExpiryWarning(account, today)
 
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
-            if (account.patronName.isNotBlank()) {
-                Text(account.patronName, style = MaterialTheme.typography.titleMedium)
-            }
-            Text(
-                "Ausweis ${account.cardNumber}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            // Ob die Hauptstelle gerade offen hat - beantwortet "kann ich jetzt hin?".
+            NoticeLine(
+                icon = Icons.Outlined.LocalLibrary,
+                text = "Stadtbücherei: ${OpeningHours.statusText(libraryStatus, now)}",
+                color = openingStatusColor(libraryStatus),
             )
+            if (cardWarning != null) {
+                Spacer(Modifier.height(6.dp))
+                NoticeLine(
+                    icon = Icons.Outlined.CreditCard,
+                    text = cardWarning,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
 
             // Die naechste Frist ist das Wichtigste auf der Karte und steht deshalb
             // gross oben links; die Gebuehren folgen klein darunter.
@@ -586,27 +716,22 @@ private fun SummaryCard(account: Account, today: LocalDate) {
                     else MaterialTheme.colorScheme.onSurface,
                 )
             }
-
-            // Ausweis laeuft demnaechst ab - nur dann zeigen, sonst ist es Rauschen.
-            if (cardDays != null && cardDays <= 60) {
-                Spacer(Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Outlined.CreditCard,
-                        null,
-                        Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.error,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        if (cardDays < 0) "Ausweis abgelaufen (${account.cardValidUntilRaw})"
-                        else "Ausweis läuft in $cardDays Tagen ab",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            }
         }
+    }
+}
+
+/** Kurzer farbiger Hinweis mit Symbol, z.B. Oeffnungsstatus oder Ausweisablauf. */
+@Composable
+private fun NoticeLine(icon: ImageVector, text: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, null, Modifier.size(18.dp), tint = color)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = color,
+        )
     }
 }
 
@@ -812,54 +937,186 @@ private fun dayWord(n: Long) = if (n == 1L) "Tag" else "Tage"
 /** Grobe Helligkeitsprobe, um die Ampelfarben an Hell/Dunkel anzupassen. */
 private fun Color.luminanceIsDark(): Boolean = (red + green + blue) / 3f < 0.5f
 
+/**
+ * Karte mit Kopfzeile zum Auf- und Zuklappen. Die Unterzeile im Kopf bleibt
+ * auch zugeklappt sichtbar - dort steht das Wichtigste der Karte.
+ */
 @Composable
-private fun SectionHeader(
-    icon: @Composable () -> Unit,
+private fun CollapsibleCard(
+    icon: ImageVector,
     title: String,
+    expanded: Boolean,
+    onToggle: () -> Unit,
     count: Int? = null,
+    subtitle: String? = null,
+    subtitleColor: Color? = null,
+    contentPadding: PaddingValues = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+    content: @Composable ColumnScope.() -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(top = 8.dp),
-    ) {
-        icon()
-        Spacer(Modifier.width(8.dp))
-        Text(title, style = MaterialTheme.typography.titleMedium)
-        if (count != null) {
-            Spacer(Modifier.width(6.dp))
-            Text(
-                count.toString(),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+    Card(Modifier.fillMaxWidth()) {
+        Column {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        onClickLabel = if (expanded) "Zuklappen" else "Aufklappen",
+                        onClick = onToggle,
+                    )
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(icon, null)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(title, style = MaterialTheme.typography.titleMedium)
+                        if (count != null) {
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                count.toString(),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    if (subtitle != null) {
+                        Text(
+                            subtitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = subtitleColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Icon(
+                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                )
+            }
+            AnimatedVisibility(expanded) {
+                Column(Modifier.padding(contentPadding), content = content)
+            }
         }
     }
 }
 
 @Composable
-private fun FeesCard(account: Account) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            KeyValue("Offene Gebühren", account.fees.open, account.fees.hasOpenFees)
-            KeyValue("Einzahlungen", account.fees.paid)
-            KeyValue("Kompletter Saldo", account.fees.balance)
-            if (!account.fees.table.isEmpty) {
-                Spacer(Modifier.height(8.dp))
+private fun FeesContent(account: Account) {
+    KeyValue("Offene Gebühren", account.fees.open, account.fees.hasOpenFees)
+    KeyValue("Einzahlungen", account.fees.paid)
+    KeyValue("Kompletter Saldo", account.fees.balance)
+    if (!account.fees.table.isEmpty) {
+        Spacer(Modifier.height(8.dp))
+        HorizontalDivider()
+        account.fees.table.asMaps().forEach { row ->
+            Spacer(Modifier.height(8.dp))
+            row.forEach { (k, v) -> KeyValue(k, v) }
+        }
+    }
+    if (account.fees.hasOpenFees) {
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "Bezahlen ist nur auf der Website der Stadtbücherei möglich.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * Oeffnungszeiten aller Standorte. Im Kopf steht, ob die Hauptstelle im Forum
+ * gerade geoeffnet hat; der Status laeuft minutengenau mit.
+ */
+@Composable
+private fun OpeningHoursCard(now: LocalDateTime, expanded: Boolean, onToggle: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
+
+    // Der Status der Hauptstelle steht schon in der Uebersicht - hier nur die Standorte.
+    CollapsibleCard(
+        icon = Icons.Outlined.LocalLibrary,
+        title = "Öffnungszeiten",
+        subtitle = OpeningHours.branches.joinToString(" · ") { it.shortName },
+        expanded = expanded,
+        onToggle = onToggle,
+    ) {
+        OpeningHours.branches.forEachIndexed { index, branch ->
+            if (index > 0) {
+                Spacer(Modifier.height(12.dp))
                 HorizontalDivider()
-                account.fees.table.asMaps().forEach { row ->
-                    Spacer(Modifier.height(8.dp))
-                    row.forEach { (k, v) -> KeyValue(k, v) }
+                Spacer(Modifier.height(12.dp))
+            }
+            val status = OpeningHours.status(branch, now)
+            Text(branch.name, style = MaterialTheme.typography.titleSmall)
+            Text(
+                branch.address,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                OpeningHours.statusText(status, now),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = openingStatusColor(status),
+                modifier = Modifier.padding(vertical = 4.dp),
+            )
+            // Sonntags hat keine Stelle offen - die Zeile wuerde nur Platz kosten.
+            DayOfWeek.entries.filter { it != DayOfWeek.SUNDAY }.forEach { day ->
+                val isToday = day == now.dayOfWeek
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 1.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    val weight = if (isToday) FontWeight.SemiBold else FontWeight.Normal
+                    Text(
+                        OpeningHours.dayName(day),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = weight,
+                        color = if (isToday) MaterialTheme.colorScheme.onSurface
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        OpeningHours.rangesText(branch.hours[day].orEmpty()),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = weight,
+                    )
                 }
             }
-            if (account.fees.hasOpenFees) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Bezahlen ist nur auf der Website der Stadtbücherei möglich.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
+        Text(
+            "Gesetzliche Feiertage sind berücksichtigt, Sonderschließungen nicht. " +
+                "Aktuelle Zeiten auf der Website der Stadt.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .padding(top = 12.dp)
+                .clickable { uriHandler.openUri(OpeningHours.SOURCE_URL) },
+        )
+    }
+}
+
+/**
+ * Uhrzeit in Deutschland fuer den Oeffnungsstatus. Wird nur beim Oeffnen der App
+ * bzw. beim Zurueckkehren in sie neu bestimmt - bewusst ohne Timer.
+ */
+@Composable
+private fun rememberNow(): LocalDateTime {
+    var now by remember { mutableStateOf(LocalDateTime.now(OpeningHours.ZONE)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        now = LocalDateTime.now(OpeningHours.ZONE)
+    }
+    return now
+}
+
+/** Gruen offen, orange kurz vor Schluss, rot geschlossen - wie bei der Frist-Ampel. */
+@Composable
+private fun openingStatusColor(status: OpeningHours.Status): Color {
+    val dark = MaterialTheme.colorScheme.surface.luminanceIsDark()
+    return when {
+        status is OpeningHours.Status.Open && status.closesSoon ->
+            if (dark) DueColors.urgentDark else DueColors.urgent
+        status is OpeningHours.Status.Open -> if (dark) DueColors.okDark else DueColors.ok
+        else -> if (dark) DueColors.overdueDark else DueColors.overdue
     }
 }
 
@@ -891,20 +1148,16 @@ private fun KeyValue(label: String, value: String, highlight: Boolean = false) {
  * werden sie generisch als Label/Wert-Paare gezeigt statt als feste Tabelle.
  */
 @Composable
-private fun TableCard(table: Table) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            table.asMaps().forEachIndexed { index, row ->
-                if (index > 0) {
-                    Spacer(Modifier.height(8.dp))
-                    HorizontalDivider()
-                    Spacer(Modifier.height(8.dp))
-                }
-                row.forEach { (k, v) ->
-                    if (k.equals("Cover", true) || k.isBlank()) return@forEach
-                    KeyValue(k, v)
-                }
-            }
+private fun TableContent(table: Table) {
+    table.asMaps().forEachIndexed { index, row ->
+        if (index > 0) {
+            Spacer(Modifier.height(8.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(8.dp))
+        }
+        row.forEach { (k, v) ->
+            if (k.equals("Cover", true) || k.isBlank()) return@forEach
+            KeyValue(k, v)
         }
     }
 }
@@ -915,11 +1168,12 @@ private fun WatchlistCard(
     total: Int?,
     removing: Set<String>,
     onRemove: (WatchItem) -> Unit,
+    expanded: Boolean,
+    onToggle: () -> Unit,
 ) {
     // Die App liest nur die erste Seite der Merkliste; der Reiter nennt die Gesamtzahl.
     val count = maxOf(total ?: 0, items.size)
     val truncated = count > items.size
-    var expanded by rememberSaveable { mutableStateOf(false) }
     var confirm by remember { mutableStateOf<WatchItem?>(null) }
     val uriHandler = LocalUriHandler.current
 
@@ -936,95 +1190,72 @@ private fun WatchlistCard(
         )
     }
 
-    Card(Modifier.fillMaxWidth()) {
-        Column {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded }
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Outlined.Bookmarks, null)
-                Spacer(Modifier.width(8.dp))
-                Text("Merkliste", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.width(6.dp))
+    CollapsibleCard(
+        icon = Icons.Outlined.Bookmarks,
+        title = "Merkliste",
+        count = count,
+        expanded = expanded,
+        onToggle = onToggle,
+        contentPadding = PaddingValues(start = 16.dp, end = 4.dp, bottom = 8.dp),
+    ) {
+        items.forEach { item ->
+            val url = item.url
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    count.toString(),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    item.title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .weight(1f)
+                        .then(
+                            if (url != null) Modifier.clickable { uriHandler.openUri(url) }
+                            else Modifier
+                        )
+                        .padding(vertical = 6.dp),
                 )
-                Spacer(Modifier.weight(1f))
-                Icon(
-                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (expanded) "Zuklappen" else "Aufklappen",
-                )
-            }
-            AnimatedVisibility(expanded) {
-                Column(Modifier.padding(start = 16.dp, end = 4.dp, bottom = 8.dp)) {
-                    items.forEach { item ->
-                        val url = item.url
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                item.title,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .then(
-                                        if (url != null) Modifier.clickable { uriHandler.openUri(url) }
-                                        else Modifier
-                                    )
-                                    .padding(vertical = 6.dp),
-                            )
-                            if (item.mediaId in removing) {
-                                Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                                }
-                            } else if (item.removeTarget != null && item.mediaId.isNotEmpty()) {
-                                IconButton(onClick = { confirm = item }) {
-                                    Icon(
-                                        Icons.Outlined.BookmarkRemove,
-                                        contentDescription = "${item.title} von der Merkliste entfernen",
-                                    )
-                                }
-                            }
-                        }
+                if (item.mediaId in removing) {
+                    Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     }
-                    Text(
-                        if (truncated) {
-                            "Die App zeigt die ersten ${items.size} von $count Einträgen. " +
-                                "Alle Einträge siehst du auf der Website."
-                        } else {
-                            "Die App zeigt bis zu ${LibraryClient.WATCHLIST_PAGE_SIZE} Einträge der Merkliste."
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (truncated) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .padding(end = 12.dp)
-                            .then(
-                                if (truncated) {
-                                    Modifier.clickable { uriHandler.openUri(LibraryClient.ACCOUNT_URL) }
-                                } else Modifier
-                            )
-                            .padding(top = 8.dp, bottom = 8.dp),
-                    )
+                } else if (item.removeTarget != null && item.mediaId.isNotEmpty()) {
+                    IconButton(onClick = { confirm = item }) {
+                        Icon(
+                            Icons.Outlined.BookmarkRemove,
+                            contentDescription = "${item.title} von der Merkliste entfernen",
+                        )
+                    }
                 }
             }
         }
+        Text(
+            if (truncated) {
+                "Die App zeigt die ersten ${items.size} von $count Einträgen. " +
+                    "Alle Einträge siehst du auf der Website."
+            } else {
+                "Die App zeigt bis zu ${LibraryClient.WATCHLIST_PAGE_SIZE} Einträge der Merkliste."
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = if (truncated) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .padding(end = 12.dp)
+                .then(
+                    if (truncated) {
+                        Modifier.clickable { uriHandler.openUri(LibraryClient.ACCOUNT_URL) }
+                    } else Modifier
+                )
+                .padding(top = 8.dp, bottom = 8.dp),
+        )
     }
 }
 
 @Composable
-private fun EmptyCard(text: String) {
-    Card(Modifier.fillMaxWidth()) {
-        Text(
-            text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(16.dp),
-        )
-    }
+private fun EmptyText(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier,
+    )
 }
 
 @Composable

@@ -78,6 +78,7 @@ class MainActivity : ComponentActivity() {
                         onAddProfile = viewModel::beginAddProfile,
                         onRenameProfile = viewModel::renameProfile,
                         onRemoveProfile = viewModel::removeProfile,
+                        onSectionToggled = viewModel::setSectionExpanded,
                     )
                     if (settingsOpen) {
                         SettingsSheet(

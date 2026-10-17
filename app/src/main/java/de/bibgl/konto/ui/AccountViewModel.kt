@@ -43,6 +43,8 @@ data class UiState(
     val feeConfirmation: FeeConfirmation? = null,
     /** Zwischengespeicherte Konten aller Profile - fuer die Vorschau im Umschalter. */
     val previews: Map<String, Account> = emptyMap(),
+    /** Vom Nutzer auf- oder zugeklappte Karten; fehlt ein Schluessel, gilt der Standard. */
+    val expandedSections: Map<String, Boolean> = emptyMap(),
 ) {
     val activeProfile: Profile? get() = profiles.firstOrNull { it.id == activeProfileId }
 
@@ -67,6 +69,7 @@ class AccountViewModel(app: Application) : AndroidViewModel(app) {
             account = active?.let { store.cachedAccount(it) },
             reminderDays = store.reminderDays,
             notificationsEnabled = store.notificationsEnabled,
+            expandedSections = store.expandedSections,
             previews = profiles.mapNotNull { p ->
                 store.cachedAccount(p.id)?.let { p.id to it }
             }.toMap(),
@@ -284,6 +287,12 @@ class AccountViewModel(app: Application) : AndroidViewModel(app) {
         else DueDateWorker.cancel(getApplication<Application>())
     }
 
+    fun setSectionExpanded(key: String, expanded: Boolean) {
+        val sections = _state.value.expandedSections + (key to expanded)
+        store.expandedSections = sections
+        _state.update { it.copy(expandedSections = sections) }
+    }
+
     /** Meldet alle Ausweise ab und loescht deren Zugangsdaten. */
     fun logoutAll() {
         repo.removeAll()
@@ -291,6 +300,7 @@ class AccountViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = UiState(
             reminderDays = store.reminderDays,
             notificationsEnabled = store.notificationsEnabled,
+            expandedSections = store.expandedSections,
         )
     }
 

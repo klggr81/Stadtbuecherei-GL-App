@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import java.util.UUID
@@ -28,6 +29,7 @@ class Store(private val context: Context) {
         private const val K_ACTIVE = "active_profile"
         private const val K_REMINDER_DAYS = "reminder_days"
         private const val K_NOTIFY = "notify_enabled"
+        private const val K_SECTIONS = "expanded_sections"
 
         // Schluessel der frueheren Einkonto-Version, nur noch fuer die Migration.
         private const val K_LEGACY_USER = "user"
@@ -44,6 +46,7 @@ class Store(private val context: Context) {
 
         val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
         private val idListSerializer = ListSerializer(String.serializer())
+        private val sectionsSerializer = MapSerializer(String.serializer(), Boolean.serializer())
     }
 
     private val plain: SharedPreferences =
@@ -205,6 +208,18 @@ class Store(private val context: Context) {
     var notificationsEnabled: Boolean
         get() = plain.getBoolean(K_NOTIFY, true)
         set(value) = plain.edit().putBoolean(K_NOTIFY, value).apply()
+
+    /**
+     * Auf- oder zugeklappte Karten der Kontoansicht, z.B. "watchlist" -> true.
+     * Fehlt ein Eintrag, entscheidet die Ansicht selbst. Gilt fuer alle Profile.
+     */
+    var expandedSections: Map<String, Boolean>
+        get() = plain.getString(K_SECTIONS, null)
+            ?.let { runCatching { json.decodeFromString(sectionsSerializer, it) }.getOrNull() }
+            ?: emptyMap()
+        set(value) = plain.edit()
+            .putString(K_SECTIONS, json.encodeToString(sectionsSerializer, value))
+            .apply()
 
     /**
      * Tag der letzten erfolgreichen Pruefung je Profil (epochDay), damit der

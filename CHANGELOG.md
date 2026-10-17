@@ -7,6 +7,24 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+### Neu
+- Oben in der Übersicht steht, ob die Stadtbücherei im Forum gerade geöffnet
+  hat und bis wann, bzw. wann sie wieder öffnet. Der Status wird beim Öffnen
+  der App bestimmt; gesetzliche Feiertage in NRW sind berücksichtigt.
+- Karte „Öffnungszeiten“ mit den Zeiten aller drei Standorte (Forum, Bensberg,
+  Paffrath) und einem Link zur Website der Stadt.
+- Alle Bereiche außer der Übersicht sind eigene Karten zum Auf- und Zuklappen.
+  Die App merkt sich, was zugeklappt ist.
+
+### Geändert
+- Neue Reihenfolge: Übersicht, Abholbereit, Ausgeliehen, Vorgemerkt,
+  Merkliste, Gebühren, Öffnungszeiten, Ausweis.
+- Die Übersichtskarte zeigt nächste Rückgabe, Anzahl der Ausleihen und offene
+  Gebühren, dazu ab 60 Tagen vor Ablauf die Warnung zum Ausweis. Name und
+  Ausweisnummer stehen jetzt in der Karte „Ausweis“, zusammen mit „gültig bis …“
+  bzw. der Ablauf-Warnung.
+- Die Gebühren-Karte startet zugeklappt, solange nichts offen ist.
+
 ## [1.8.2] - 2026-10-04
 
 ### Geändert
