@@ -7,6 +7,16 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-10-17
+
+### Neu
+- In den Einstellungen lässt sich wählen, welche Bücherei oben in der
+  Übersicht steht: Forum (Standard), Bensberg oder Paffrath.
+
+### Geändert
+- Übersicht: Der Name der Bücherei steht in einer eigenen Zeile, darunter ob
+  sie geöffnet hat und bis wann bzw. wann sie wieder öffnet.
+
 ## [1.9.0] - 2026-10-17
 
 ### Neu
@@ -91,7 +101,8 @@ Erste veröffentlichte Version.
 - Mehrere Ausweise mit Konto-Umschalter.
 - Erinnerungen vor Fristende und Warnung vor Ausweisablauf.
 
-[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.1...HEAD
+[1.9.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.8.2...v1.9.0
 [1.8.2]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.8...v1.8.1

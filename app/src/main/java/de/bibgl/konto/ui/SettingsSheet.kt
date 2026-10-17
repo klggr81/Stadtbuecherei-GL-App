@@ -7,9 +7,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -19,7 +25,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import de.bibgl.konto.data.OpeningHours
 
 /** Auswaehlbare Vorlaufzeiten in Tagen. */
 private val REMINDER_OPTIONS = listOf(1, 2, 3, 5, 7, 14)
@@ -33,11 +41,16 @@ fun SettingsSheet(
     onDismiss: () -> Unit,
     onNotificationsChanged: (Boolean) -> Unit,
     onReminderDaysChanged: (Int) -> Unit,
+    onOverviewBranchChanged: (String) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 32.dp)) {
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
+        ) {
             Text("Einstellungen", style = MaterialTheme.typography.headlineSmall)
 
             Spacer(Modifier.height(24.dp))
@@ -93,6 +106,43 @@ fun SettingsSheet(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+
+            Spacer(Modifier.height(24.dp))
+            Text("Bücherei in der Übersicht", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Oben in der Übersicht steht, ob diese Bücherei gerade geöffnet hat",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+            Column(Modifier.selectableGroup()) {
+                OpeningHours.branches.forEach { branch ->
+                    val selected = branch.id == state.overviewBranchId
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .selectable(
+                                selected = selected,
+                                onClick = { onOverviewBranchChanged(branch.id) },
+                                role = Role.RadioButton,
+                            )
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        // Klick laeuft ueber die ganze Zeile, daher onClick = null.
+                        RadioButton(selected = selected, onClick = null)
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text(branch.name, style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                branch.address,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(Modifier.height(24.dp))

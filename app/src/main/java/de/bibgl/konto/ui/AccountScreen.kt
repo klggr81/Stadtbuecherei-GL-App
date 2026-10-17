@@ -341,7 +341,9 @@ private fun AccountContent(
             item { ErrorBanner(error) }
         }
 
-        item(key = "overview") { OverviewCard(account, today, now) }
+        item(key = "overview") {
+            OverviewCard(account, today, now, OpeningHours.branch(state.overviewBranchId))
+        }
 
         if (!account.readyForPickup.isEmpty) {
             item(key = S_PICKUP) {
@@ -652,21 +654,47 @@ private fun cardExpiryWarning(account: Account, today: LocalDate): String? {
 }
 
 @Composable
-private fun OverviewCard(account: Account, today: LocalDate, now: LocalDateTime) {
+private fun OverviewCard(
+    account: Account,
+    today: LocalDate,
+    now: LocalDateTime,
+    branch: OpeningHours.Branch,
+) {
     val next = account.loansByDueDate.firstOrNull()
-    val libraryStatus = OpeningHours.status(OpeningHours.main, now)
+    val libraryStatus = OpeningHours.status(branch, now)
     val cardWarning = cardExpiryWarning(account, today)
 
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
-            // Ob die Hauptstelle gerade offen hat - beantwortet "kann ich jetzt hin?".
-            NoticeLine(
-                icon = Icons.Outlined.LocalLibrary,
-                text = "Stadtbücherei: ${OpeningHours.statusText(libraryStatus, now)}",
-                color = openingStatusColor(libraryStatus),
-            )
+            // Ob die in den Einstellungen gewaehlte Buecherei gerade offen hat -
+            // beantwortet "kann ich jetzt hin?". Name oben, Status darunter.
+            Row {
+                val color = openingStatusColor(libraryStatus)
+                Icon(
+                    Icons.Outlined.LocalLibrary,
+                    null,
+                    Modifier
+                        .padding(top = 1.dp)
+                        .size(18.dp),
+                    tint = color,
+                )
+                Spacer(Modifier.width(8.dp))
+                Column {
+                    Text(
+                        branch.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        OpeningHours.statusText(libraryStatus, now),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = color,
+                    )
+                }
+            }
             if (cardWarning != null) {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
                 NoticeLine(
                     icon = Icons.Outlined.CreditCard,
                     text = cardWarning,

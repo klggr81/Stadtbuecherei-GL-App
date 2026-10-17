@@ -24,6 +24,8 @@ object OpeningHours {
     data class Range(val from: LocalTime, val to: LocalTime)
 
     data class Branch(
+        /** Stabile Kennung - wird als Einstellung gespeichert, nicht aendern. */
+        val id: String,
         val name: String,
         /** Kurzname fuer Aufzaehlungen, z.B. "Forum". */
         val shortName: String,
@@ -38,6 +40,7 @@ object OpeningHours {
 
     val branches: List<Branch> = listOf(
         Branch(
+            id = "forum",
             name = "Stadtbücherei im Forum",
             shortName = "Forum",
             address = "Hauptstr. 250",
@@ -51,6 +54,7 @@ object OpeningHours {
             ),
         ),
         Branch(
+            id = "bensberg",
             name = "Stadtteilbücherei Bensberg",
             shortName = "Bensberg",
             address = "Schlossstr. 46-48",
@@ -63,6 +67,7 @@ object OpeningHours {
             ),
         ),
         Branch(
+            id = "paffrath",
             name = "Stadtteilbücherei Paffrath",
             shortName = "Paffrath",
             address = "Borngasse 86 (in der IGP)",
@@ -76,8 +81,11 @@ object OpeningHours {
         ),
     )
 
-    /** Hauptstelle - ihr Status steht im Kopf der Karte. */
+    /** Hauptstelle - Standard fuer den Status in der Uebersicht. */
     val main: Branch get() = branches.first()
+
+    /** Standort zur gespeicherten Kennung; unbekannt oder leer = Hauptstelle. */
+    fun branch(id: String?): Branch = branches.firstOrNull { it.id == id } ?: main
 
     sealed interface Status {
         /** Geoeffnet bis [until]; [closesSoon] ab 30 Minuten vor Schluss. */

@@ -30,6 +30,7 @@ class Store(private val context: Context) {
         private const val K_REMINDER_DAYS = "reminder_days"
         private const val K_NOTIFY = "notify_enabled"
         private const val K_SECTIONS = "expanded_sections"
+        private const val K_OVERVIEW_BRANCH = "overview_branch"
 
         // Schluessel der frueheren Einkonto-Version, nur noch fuer die Migration.
         private const val K_LEGACY_USER = "user"
@@ -208,6 +209,11 @@ class Store(private val context: Context) {
     var notificationsEnabled: Boolean
         get() = plain.getBoolean(K_NOTIFY, true)
         set(value) = plain.edit().putBoolean(K_NOTIFY, value).apply()
+
+    /** Standort, dessen Oeffnungsstatus die Uebersicht zeigt (Kennung aus [OpeningHours]). */
+    var overviewBranchId: String
+        get() = plain.getString(K_OVERVIEW_BRANCH, null) ?: OpeningHours.main.id
+        set(value) = plain.edit().putString(K_OVERVIEW_BRANCH, value).apply()
 
     /**
      * Auf- oder zugeklappte Karten der Kontoansicht, z.B. "watchlist" -> true.

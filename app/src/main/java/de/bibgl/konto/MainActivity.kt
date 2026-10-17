@@ -86,6 +86,7 @@ class MainActivity : ComponentActivity() {
                             onDismiss = { settingsOpen = false },
                             onNotificationsChanged = viewModel::setNotificationsEnabled,
                             onReminderDaysChanged = viewModel::setReminderDays,
+                            onOverviewBranchChanged = viewModel::setOverviewBranch,
                         )
                     }
                 }

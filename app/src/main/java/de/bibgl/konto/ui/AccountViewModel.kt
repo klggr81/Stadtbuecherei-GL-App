@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import de.bibgl.konto.data.Account
 import de.bibgl.konto.data.AccountRepository
 import de.bibgl.konto.data.LibraryException
+import de.bibgl.konto.data.OpeningHours
 import de.bibgl.konto.data.Profile
 import de.bibgl.konto.data.Store
 import de.bibgl.konto.data.WatchItem
@@ -45,6 +46,8 @@ data class UiState(
     val previews: Map<String, Account> = emptyMap(),
     /** Vom Nutzer auf- oder zugeklappte Karten; fehlt ein Schluessel, gilt der Standard. */
     val expandedSections: Map<String, Boolean> = emptyMap(),
+    /** Standort, dessen Oeffnungsstatus oben in der Uebersicht steht. */
+    val overviewBranchId: String = OpeningHours.main.id,
 ) {
     val activeProfile: Profile? get() = profiles.firstOrNull { it.id == activeProfileId }
 
@@ -70,6 +73,7 @@ class AccountViewModel(app: Application) : AndroidViewModel(app) {
             reminderDays = store.reminderDays,
             notificationsEnabled = store.notificationsEnabled,
             expandedSections = store.expandedSections,
+            overviewBranchId = store.overviewBranchId,
             previews = profiles.mapNotNull { p ->
                 store.cachedAccount(p.id)?.let { p.id to it }
             }.toMap(),
@@ -287,6 +291,11 @@ class AccountViewModel(app: Application) : AndroidViewModel(app) {
         else DueDateWorker.cancel(getApplication<Application>())
     }
 
+    fun setOverviewBranch(id: String) {
+        store.overviewBranchId = id
+        _state.update { it.copy(overviewBranchId = id) }
+    }
+
     fun setSectionExpanded(key: String, expanded: Boolean) {
         val sections = _state.value.expandedSections + (key to expanded)
         store.expandedSections = sections
@@ -301,6 +310,7 @@ class AccountViewModel(app: Application) : AndroidViewModel(app) {
             reminderDays = store.reminderDays,
             notificationsEnabled = store.notificationsEnabled,
             expandedSections = store.expandedSections,
+            overviewBranchId = store.overviewBranchId,
         )
     }
 
