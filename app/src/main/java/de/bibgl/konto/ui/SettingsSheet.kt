@@ -28,9 +28,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import de.bibgl.konto.data.OpeningHours
+import de.bibgl.konto.data.ThemeMode
 
 /** Auswaehlbare Vorlaufzeiten in Tagen. */
 private val REMINDER_OPTIONS = listOf(1, 2, 3, 5, 7, 14)
+
+private val THEME_OPTIONS = listOf(
+    ThemeMode.SYSTEM to "System",
+    ThemeMode.LIGHT to "Hell",
+    ThemeMode.DARK to "Dunkel",
+)
 
 private fun dayPhrase(days: Int) = if (days == 1) "1 Tag" else "$days Tage"
 
@@ -42,6 +49,8 @@ fun SettingsSheet(
     onNotificationsChanged: (Boolean) -> Unit,
     onReminderDaysChanged: (Int) -> Unit,
     onOverviewBranchChanged: (String) -> Unit,
+    onThemeModeChanged: (ThemeMode) -> Unit,
+    onDynamicColorChanged: (Boolean) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -142,6 +151,42 @@ fun SettingsSheet(
                             )
                         }
                     }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+            Text("Darstellung", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(12.dp))
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                THEME_OPTIONS.forEachIndexed { index, (mode, label) ->
+                    SegmentedButton(
+                        selected = state.themeMode == mode,
+                        onClick = { onThemeModeChanged(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(index, THEME_OPTIONS.size),
+                        label = { Text(label) },
+                    )
+                }
+            }
+
+            if (supportsDynamicColor) {
+                Spacer(Modifier.height(16.dp))
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Dynamische Farben", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Farben passend zum Hintergrundbild. Aus: die grünen Farben der App",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = state.dynamicColor,
+                        onCheckedChange = onDynamicColorChanged,
+                    )
                 }
             }
 

@@ -10,6 +10,9 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
+/** Hell/Dunkel-Wahl; der Name wird gespeichert, Eintraege also nicht umbenennen. */
+enum class ThemeMode { SYSTEM, LIGHT, DARK }
+
 /**
  * Ablage auf dem Geraet.
  *
@@ -31,6 +34,8 @@ class Store(private val context: Context) {
         private const val K_NOTIFY = "notify_enabled"
         private const val K_SECTIONS = "expanded_sections"
         private const val K_OVERVIEW_BRANCH = "overview_branch"
+        private const val K_THEME_MODE = "theme_mode"
+        private const val K_DYNAMIC_COLOR = "dynamic_color"
 
         // Schluessel der frueheren Einkonto-Version, nur noch fuer die Migration.
         private const val K_LEGACY_USER = "user"
@@ -214,6 +219,17 @@ class Store(private val context: Context) {
     var overviewBranchId: String
         get() = plain.getString(K_OVERVIEW_BRANCH, null) ?: OpeningHours.main.id
         set(value) = plain.edit().putString(K_OVERVIEW_BRANCH, value).apply()
+
+    var themeMode: ThemeMode
+        get() = plain.getString(K_THEME_MODE, null)
+            ?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } }
+            ?: ThemeMode.SYSTEM
+        set(value) = plain.edit().putString(K_THEME_MODE, value.name).apply()
+
+    /** Farben vom Hintergrundbild (ab Android 12). Standard an - so war es bis 1.9. */
+    var dynamicColor: Boolean
+        get() = plain.getBoolean(K_DYNAMIC_COLOR, true)
+        set(value) = plain.edit().putBoolean(K_DYNAMIC_COLOR, value).apply()
 
     /**
      * Auf- oder zugeklappte Karten der Kontoansicht, z.B. "watchlist" -> true.

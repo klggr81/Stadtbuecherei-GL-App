@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import de.bibgl.konto.data.ThemeMode
 
 private val LightColors = lightColorScheme(
     primary = Color(0xFF1B5E4A),
@@ -50,13 +51,27 @@ object DueColors {
     val okDark = Color(0xFF7FD1AC)
 }
 
+/** Dynamische Farben gibt es erst ab Android 12 - darunter wird der Schalter ausgeblendet. */
+val supportsDynamicColor: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+/** Ob die App dunkel erscheint - aus der Einstellung bzw. der Systemvorgabe. */
 @Composable
-fun BibTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
+fun ThemeMode.isDark(): Boolean = when (this) {
+    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    ThemeMode.LIGHT -> false
+    ThemeMode.DARK -> true
+}
+
+@Composable
+fun BibTheme(
+    dark: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit,
+) {
     val context = LocalContext.current
     val colors = when {
-        // Ab Android 12 passt sich die App an das Wallpaper-Farbschema an.
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+        // Ab Android 12 kann sich die App an das Wallpaper-Farbschema anpassen.
+        dynamicColor && supportsDynamicColor ->
             if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         dark -> DarkColors
         else -> LightColors

@@ -2,13 +2,16 @@ package de.bibgl.konto
 
 import android.Manifest
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +23,7 @@ import de.bibgl.konto.ui.AccountViewModel
 import de.bibgl.konto.ui.BibTheme
 import de.bibgl.konto.ui.LoginScreen
 import de.bibgl.konto.ui.SettingsSheet
+import de.bibgl.konto.ui.isDark
 import de.bibgl.konto.work.Notifications
 
 class MainActivity : ComponentActivity() {
@@ -27,6 +31,11 @@ class MainActivity : ComponentActivity() {
     companion object {
         /** Aus einer Benachrichtigung: direkt diesen Ausweis anzeigen. */
         const val EXTRA_PROFILE_ID = "profile_id"
+
+        // Wie die Standardwerte von enableEdgeToEdge() - nur fuer die
+        // Dreitasten-Navigation sichtbar, bei Gestensteuerung transparent.
+        private val LIGHT_SCRIM = Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
+        private val DARK_SCRIM = Color.argb(0x80, 0x1b, 0x1b, 0x1b)
     }
 
     private val viewModel: AccountViewModel by viewModels()
@@ -41,8 +50,22 @@ class MainActivity : ComponentActivity() {
         openProfileFrom(intent)
 
         setContent {
-            BibTheme {
-                val state by viewModel.state.collectAsStateWithLifecycle()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            val dark = state.themeMode.isDark()
+
+            // Symbole der Statusleiste muessen der App folgen, nicht dem System -
+            // sonst stehen bei "Hell" in einem dunklen System weisse Symbole auf Weiss.
+            DisposableEffect(dark) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(
+                        Color.TRANSPARENT, Color.TRANSPARENT,
+                    ) { dark },
+                    navigationBarStyle = SystemBarStyle.auto(LIGHT_SCRIM, DARK_SCRIM) { dark },
+                )
+                onDispose {}
+            }
+
+            BibTheme(dark = dark, dynamicColor = state.dynamicColor) {
                 var settingsOpen by remember { mutableStateOf(false) }
 
                 // Erst nach erfolgreicher Anmeldung nach der Benachrichtigungs-
@@ -87,6 +110,8 @@ class MainActivity : ComponentActivity() {
                             onNotificationsChanged = viewModel::setNotificationsEnabled,
                             onReminderDaysChanged = viewModel::setReminderDays,
                             onOverviewBranchChanged = viewModel::setOverviewBranch,
+                            onThemeModeChanged = viewModel::setThemeMode,
+                            onDynamicColorChanged = viewModel::setDynamicColor,
                         )
                     }
                 }

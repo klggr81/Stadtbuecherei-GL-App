@@ -9,6 +9,7 @@ import de.bibgl.konto.data.LibraryException
 import de.bibgl.konto.data.OpeningHours
 import de.bibgl.konto.data.Profile
 import de.bibgl.konto.data.Store
+import de.bibgl.konto.data.ThemeMode
 import de.bibgl.konto.data.WatchItem
 import de.bibgl.konto.work.DueDateWorker
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,6 +49,8 @@ data class UiState(
     val expandedSections: Map<String, Boolean> = emptyMap(),
     /** Standort, dessen Oeffnungsstatus oben in der Uebersicht steht. */
     val overviewBranchId: String = OpeningHours.main.id,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val dynamicColor: Boolean = true,
 ) {
     val activeProfile: Profile? get() = profiles.firstOrNull { it.id == activeProfileId }
 
@@ -74,6 +77,8 @@ class AccountViewModel(app: Application) : AndroidViewModel(app) {
             notificationsEnabled = store.notificationsEnabled,
             expandedSections = store.expandedSections,
             overviewBranchId = store.overviewBranchId,
+            themeMode = store.themeMode,
+            dynamicColor = store.dynamicColor,
             previews = profiles.mapNotNull { p ->
                 store.cachedAccount(p.id)?.let { p.id to it }
             }.toMap(),
@@ -294,6 +299,16 @@ class AccountViewModel(app: Application) : AndroidViewModel(app) {
     fun setOverviewBranch(id: String) {
         store.overviewBranchId = id
         _state.update { it.copy(overviewBranchId = id) }
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        store.themeMode = mode
+        _state.update { it.copy(themeMode = mode) }
+    }
+
+    fun setDynamicColor(enabled: Boolean) {
+        store.dynamicColor = enabled
+        _state.update { it.copy(dynamicColor = enabled) }
     }
 
     fun setSectionExpanded(key: String, expanded: Boolean) {
