@@ -7,6 +7,21 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+## [1.10.2] - 2026-10-19
+
+### Geändert
+- Dunkles Design (ohne dynamische Farben) kontrastreicher: fast schwarzer
+  Hintergrund, hellere Schrift und Akzente.
+- Übersicht: „Ausgeliehen“ und „Offene Gebühren“ entfallen – beides steht in
+  den Karten darunter. Der Hinweis zum Ablauf des Ausweises steht unter der
+  nächsten Rückgabe, mit Symbol im selben Stil wie die Bücherei.
+- Die Symbole der Karten sind größer und sitzen in einer runden
+  Expressive-Form.
+
+### Behoben
+- Medien ohne Cover (z.B. Tonies, die keine ISBN haben) zeigen statt eines
+  leeren grauen Kastens das Symbol ihrer Medienart.
+
 ## [1.10.1] - 2026-10-19
 
 ### Neu
@@ -137,7 +152,8 @@ Erste veröffentlichte Version.
 - Mehrere Ausweise mit Konto-Umschalter.
 - Erinnerungen vor Fristende und Warnung vor Ausweisablauf.
 
-[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.1...HEAD
+[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.2...HEAD
+[1.10.2]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.1...v1.10.0
 [1.9.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.0...v1.9.1
