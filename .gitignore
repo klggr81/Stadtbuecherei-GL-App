@@ -13,3 +13,7 @@ captures/
 # der Workflow legt app/keystore.jks vor dem Build daraus an.
 *.jks
 *.keystore
+
+# Persoenliche Notizen, nicht im Repository.
+todo.local.md
+CLAUDE.local.md
