@@ -12,9 +12,9 @@ Frist abläuft.
 
 ## Screenshots
 
-| Ausgeliehene Medien | Konto hinzufügen | Einstellungen |
-|:---:|:---:|:---:|
-| <img src="docs/screenshots/01-ausleihen.jpg" width="240" alt="Liste ausgeliehener Medien mit Countdown bis zur Rückgabe"> | <img src="docs/screenshots/02-konto-hinzufuegen.jpg" width="240" alt="Anmeldung mit Ausweisnummer und Passwort"> | <img src="docs/screenshots/03-einstellungen.jpg" width="240" alt="Einstellungen für Erinnerungen"> |
+| Übersicht (hell) | Übersicht (dunkel) | Öffnungszeiten | Einstellungen |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/01-uebersicht-hell.jpg" width="200" alt="Übersicht mit nächster Rückgabe und ausgeliehenen Medien im hellen Design"> | <img src="docs/screenshots/02-uebersicht-dunkel.jpg" width="200" alt="Dieselbe Übersicht im dunklen Design"> | <img src="docs/screenshots/03-oeffnungszeiten.jpg" width="200" alt="Öffnungszeiten der Standorte mit aktuellem Status"> | <img src="docs/screenshots/04-einstellungen.jpg" width="200" alt="Einstellungen für Erinnerungen, Bücherei und Darstellung"> |
 
 
 ## Installation
