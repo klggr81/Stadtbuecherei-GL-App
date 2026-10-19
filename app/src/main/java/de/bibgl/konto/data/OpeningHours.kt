@@ -113,22 +113,31 @@ object OpeningHours {
         return Status.Closed(next, holiday = isHoliday(today))
     }
 
-    /** "Geöffnet bis 19:00 Uhr" / "Geschlossen · öffnet morgen um 12:00 Uhr" */
-    fun statusText(status: Status, now: LocalDateTime): String = when (status) {
-        is Status.Open -> "Geöffnet bis ${fmt(status.until)} Uhr"
-        is Status.Closed -> {
-            val prefix = if (status.holiday) "Feiertag, geschlossen" else "Geschlossen"
-            val next = status.next
-            if (next == null) prefix
-            else "$prefix · öffnet ${dayPhrase(next.toLocalDate(), now.toLocalDate())} " +
-                "um ${fmt(next.toLocalTime())} Uhr"
+    /*
+     * Der Status steht in zwei Teilen: ein kurzes Etikett ("Geschlossen") und
+     * der Zeitpunkt ("Öffnet heute 12:00"). Als ein Satz war er zu lang - auf
+     * schmalen Geraeten brach "Uhr" allein in die naechste Zeile. Die UI setzt
+     * beide Teile nebeneinander und bricht nur zwischen ihnen um.
+     */
+
+    /** "Geöffnet", "Schließt bald", "Geschlossen" oder "Feiertag". */
+    fun statusLabel(status: Status): String = when (status) {
+        is Status.Open -> if (status.closesSoon) "Schließt bald" else "Geöffnet"
+        is Status.Closed -> if (status.holiday) "Feiertag" else "Geschlossen"
+    }
+
+    /** "bis 19:00" / "Öffnet morgen 12:00"; null, wenn keine Oeffnung in Sicht. */
+    fun statusDetail(status: Status, now: LocalDateTime): String? = when (status) {
+        is Status.Open -> "bis ${fmt(status.until)}"
+        is Status.Closed -> status.next?.let {
+            "Öffnet ${dayPhrase(it.toLocalDate(), now.toLocalDate())} ${fmt(it.toLocalTime())}"
         }
     }
 
     private fun dayPhrase(day: LocalDate, today: LocalDate): String = when (day) {
         today -> "heute"
         today.plusDays(1) -> "morgen"
-        else -> if (day < today.plusDays(7)) "am ${dayName(day.dayOfWeek)}"
+        else -> if (day < today.plusDays(7)) dayName(day.dayOfWeek)
         else "am ${day.dayOfMonth}.${day.monthValue}."
     }
 
@@ -136,9 +145,10 @@ object OpeningHours {
 
     private val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-    fun rangesText(ranges: List<Range>): String =
-        if (ranges.isEmpty()) "geschlossen"
-        else ranges.joinToString(" und ") { "${fmt(it.from)}–${fmt(it.to)}" }
+    /** Je Zeitfenster eine Zeile ("10:00–11:30", "15:00–17:00"); ohne Fenster "geschlossen". */
+    fun rangeLines(ranges: List<Range>): List<String> =
+        if (ranges.isEmpty()) listOf("geschlossen")
+        else ranges.map { "${fmt(it.from)}–${fmt(it.to)}" }
 
     fun dayName(day: DayOfWeek): String = when (day) {
         DayOfWeek.MONDAY -> "Montag"

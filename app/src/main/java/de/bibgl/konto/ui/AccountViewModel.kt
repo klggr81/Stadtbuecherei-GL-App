@@ -51,6 +51,7 @@ data class UiState(
     val overviewBranchId: String = OpeningHours.main.id,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
+    val hideEmptyCards: Boolean = true,
 ) {
     val activeProfile: Profile? get() = profiles.firstOrNull { it.id == activeProfileId }
 
@@ -79,6 +80,7 @@ class AccountViewModel(app: Application) : AndroidViewModel(app) {
             overviewBranchId = store.overviewBranchId,
             themeMode = store.themeMode,
             dynamicColor = store.dynamicColor,
+            hideEmptyCards = store.hideEmptyCards,
             previews = profiles.mapNotNull { p ->
                 store.cachedAccount(p.id)?.let { p.id to it }
             }.toMap(),
@@ -309,6 +311,11 @@ class AccountViewModel(app: Application) : AndroidViewModel(app) {
     fun setDynamicColor(enabled: Boolean) {
         store.dynamicColor = enabled
         _state.update { it.copy(dynamicColor = enabled) }
+    }
+
+    fun setHideEmptyCards(hide: Boolean) {
+        store.hideEmptyCards = hide
+        _state.update { it.copy(hideEmptyCards = hide) }
     }
 
     fun setSectionExpanded(key: String, expanded: Boolean) {

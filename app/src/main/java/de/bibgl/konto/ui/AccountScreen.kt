@@ -1,3 +1,7 @@
+// Betonte Schriftstile (z.B. labelLargeEmphasized) sind Teil von Material 3
+// Expressive und noch experimentell.
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package de.bibgl.konto.ui
 
 import androidx.compose.animation.AnimatedVisibility
@@ -7,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -63,6 +69,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -74,6 +81,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -87,7 +95,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -103,7 +113,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(
     state: UiState,
@@ -327,7 +337,6 @@ private const val S_HOURS = "opening_hours"
 private const val S_WATCHLIST = "watchlist"
 private const val S_CARD = "library_card"
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AccountContent(
     account: Account,
@@ -361,16 +370,22 @@ private fun AccountContent(
             OverviewCard(account, today, now, OpeningHours.branch(state.overviewBranchId))
         }
 
-        if (!account.readyForPickup.isEmpty) {
+        // Abholbereit, Vorgemerkt und Merkliste: leer ausgeblendet, ausser der
+        // Nutzer will alle Karten sehen (Einstellung "Leere Karten ausblenden").
+        val showEmpty = !state.hideEmptyCards
+
+        if (showEmpty || !account.readyForPickup.isEmpty) {
             item(key = S_PICKUP) {
                 CollapsibleCard(
                     icon = Icons.Outlined.Inventory2,
                     title = "Abholbereit",
                     count = account.readyForPickup.rows.size,
-                    expanded = expanded(S_PICKUP, true),
-                    onToggle = toggle(S_PICKUP, true),
+                    // Leer startet die Karte zugeklappt - sie wuerde nur Platz kosten.
+                    expanded = expanded(S_PICKUP, !account.readyForPickup.isEmpty),
+                    onToggle = toggle(S_PICKUP, !account.readyForPickup.isEmpty),
                 ) {
-                    TableContent(account.readyForPickup)
+                    if (account.readyForPickup.isEmpty) EmptyText("Nichts abholbereit")
+                    else TableContent(account.readyForPickup)
                 }
             }
         }
@@ -416,21 +431,22 @@ private fun AccountContent(
             }
         }
 
-        if (!account.reservations.isEmpty) {
+        if (showEmpty || !account.reservations.isEmpty) {
             item(key = S_RESERVATIONS) {
                 CollapsibleCard(
                     icon = Icons.Outlined.Schedule,
                     title = "Vorgemerkt",
                     count = account.reservations.rows.size,
-                    expanded = expanded(S_RESERVATIONS, true),
-                    onToggle = toggle(S_RESERVATIONS, true),
+                    expanded = expanded(S_RESERVATIONS, !account.reservations.isEmpty),
+                    onToggle = toggle(S_RESERVATIONS, !account.reservations.isEmpty),
                 ) {
-                    TableContent(account.reservations)
+                    if (account.reservations.isEmpty) EmptyText("Keine Vormerkungen")
+                    else TableContent(account.reservations)
                 }
             }
         }
 
-        if (account.watchlist.isNotEmpty()) {
+        if (showEmpty || account.watchlist.isNotEmpty()) {
             item(key = S_WATCHLIST) {
                 WatchlistCard(
                     items = account.watchlist,
@@ -529,8 +545,8 @@ private fun ProfileSwitcherMenu(
                     Column {
                         Text(
                             profile.label,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+                            style = if (isActive) MaterialTheme.typography.bodyLargeEmphasized
+                            else MaterialTheme.typography.bodyLarge,
                         )
                         Text(
                             profileSummary(preview, today),
@@ -645,8 +661,8 @@ private fun LibraryCardCard(
         if (validity != null) {
             Text(
                 validity,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (warn != null) FontWeight.SemiBold else FontWeight.Normal,
+                style = if (warn != null) MaterialTheme.typography.bodyMediumEmphasized
+                else MaterialTheme.typography.bodyMedium,
                 color = validityColor,
                 modifier = Modifier.padding(top = 4.dp),
             )
@@ -681,37 +697,43 @@ private fun OverviewCard(
     val libraryStatus = OpeningHours.status(branch, now)
     val cardWarning = cardExpiryWarning(account, today)
 
-    Card(Modifier.fillMaxWidth()) {
+    // Expressive: Die Uebersicht ist die Hero-Karte der App und hebt sich durch
+    // staerker gerundete Ecken (extraLarge) von den uebrigen Karten ab.
+    Card(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge) {
         Column(Modifier.padding(16.dp)) {
             // Ob die in den Einstellungen gewaehlte Buecherei gerade offen hat -
-            // beantwortet "kann ich jetzt hin?". Name oben, Status darunter.
-            Row {
-                val color = openingStatusColor(libraryStatus)
-                Icon(
-                    Icons.Outlined.LocalLibrary,
-                    null,
+            // beantwortet "kann ich jetzt hin?". Aufgebaut wie ein Listeneintrag:
+            // Symbol in Expressive-Form links, Name und Status daneben.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
                     Modifier
-                        .padding(top = 1.dp)
-                        .size(18.dp),
-                    tint = color,
-                )
-                Spacer(Modifier.width(8.dp))
+                        .size(44.dp)
+                        .clip(MaterialShapes.Cookie9Sided.toShape())
+                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Outlined.LocalLibrary,
+                        null,
+                        Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
                 Column {
                     Text(
                         branch.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodyMediumEmphasized,
                     )
-                    Text(
-                        OpeningHours.statusText(libraryStatus, now),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = color,
+                    OpeningStatusLine(
+                        libraryStatus,
+                        now,
+                        Modifier.padding(top = 4.dp),
                     )
                 }
             }
             if (cardWarning != null) {
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(12.dp))
                 NoticeLine(
                     icon = Icons.Outlined.CreditCard,
                     text = cardWarning,
@@ -719,49 +741,76 @@ private fun OverviewCard(
                 )
             }
 
-            // Die naechste Frist ist das Wichtigste auf der Karte und steht deshalb
-            // gross oben links; die Gebuehren folgen klein darunter.
-            Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                if (next != null) {
-                    val days = next.daysLeft(today)
-                    Column(Modifier.weight(1f)) {
-                        Stat(
-                            "Nächste Rückgabe",
-                            countdownLabel(days),
-                            valueColor = countdownColor(days),
-                        )
-                        Text(
-                            next.title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(top = 2.dp),
-                        )
-                    }
+            // Die naechste Frist ist das Wichtigste auf der Karte: eigener Behaelter,
+            // leicht in der Ampelfarbe getoent (wie der Countdown-Chip), grosse Schrift.
+            if (next != null) {
+                val days = next.daysLeft(today)
+                val color = countdownColor(days)
+                Spacer(Modifier.height(16.dp))
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.large)
+                        .background(color.copy(alpha = 0.12f))
+                        .padding(16.dp),
+                ) {
+                    Stat(
+                        "Nächste Rückgabe",
+                        countdownLabel(days),
+                        valueColor = color,
+                        // Der eine "Hero-Moment" der App (Expressive): die naechste
+                        // Frist gross und kraeftig, alles andere bleibt ruhig.
+                        valueStyle = MaterialTheme.typography.headlineLargeEmphasized,
+                    )
+                    Text(
+                        next.title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
                 }
-                Stat("Ausgeliehen", account.loans.size.toString())
             }
 
             Spacer(Modifier.height(16.dp))
-            HorizontalDivider()
-            Spacer(Modifier.height(12.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
+            // Bricht auf schmalen Geraeten zwischen den beiden Angaben um, nie mittendrin.
+            // Eingerueckt wie der Text im Hero-Behaelter darueber - eine gemeinsame Kante.
+            FlowRow(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                InlineStat("Ausgeliehen", account.loans.size.toString())
+                InlineStat(
                     "Offene Gebühren",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
                     account.fees.open,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (account.fees.hasOpenFees) MaterialTheme.colorScheme.error
+                    valueColor = if (account.fees.hasOpenFees) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
+    }
+}
+
+/** Kleine Angabe in einer Zeile: "Ausgeliehen 3", "Offene Gebühren 0,00 EUR". */
+@Composable
+private fun InlineStat(
+    label: String,
+    value: String,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            value,
+            style = MaterialTheme.typography.bodyMediumEmphasized,
+            color = valueColor,
+        )
     }
 }
 
@@ -773,8 +822,7 @@ private fun NoticeLine(icon: ImageVector, text: String, color: Color) {
         Spacer(Modifier.width(8.dp))
         Text(
             text,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyMediumEmphasized,
             color = color,
         )
     }
@@ -785,6 +833,7 @@ private fun Stat(
     label: String,
     value: String,
     valueColor: Color = MaterialTheme.colorScheme.onSurface,
+    valueStyle: TextStyle = MaterialTheme.typography.titleLarge,
 ) {
     Column {
         Text(
@@ -794,13 +843,12 @@ private fun Stat(
         )
         Text(
             value,
-            style = MaterialTheme.typography.titleLarge,
+            style = valueStyle,
             color = valueColor,
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LoanCard(loan: Loan, today: LocalDate, busy: Boolean, onRenew: () -> Unit) {
     val uriHandler = LocalUriHandler.current
@@ -947,8 +995,7 @@ private fun CountdownChip(loan: Loan, today: LocalDate) {
     val color = countdownColor(days)
     Text(
         countdownLabel(days),
-        style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.SemiBold,
+        style = MaterialTheme.typography.labelLargeEmphasized,
         color = color,
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
@@ -1097,13 +1144,7 @@ private fun OpeningHoursCard(now: LocalDateTime, expanded: Boolean, onToggle: ()
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                OpeningHours.statusText(status, now),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = openingStatusColor(status),
-                modifier = Modifier.padding(vertical = 4.dp),
-            )
+            OpeningStatusLine(status, now, Modifier.padding(vertical = 8.dp))
             // Sonntags hat keine Stelle offen - die Zeile wuerde nur Platz kosten.
             DayOfWeek.entries.filter { it != DayOfWeek.SUNDAY }.forEach { day ->
                 val isToday = day == now.dayOfWeek
@@ -1113,19 +1154,27 @@ private fun OpeningHoursCard(now: LocalDateTime, expanded: Boolean, onToggle: ()
                         .padding(vertical = 1.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    val weight = if (isToday) FontWeight.SemiBold else FontWeight.Normal
+                    val dayStyle = if (isToday) MaterialTheme.typography.bodyMediumEmphasized
+                    else MaterialTheme.typography.bodyMedium
                     Text(
                         OpeningHours.dayName(day),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = weight,
+                        style = dayStyle,
                         color = if (isToday) MaterialTheme.colorScheme.onSurface
                         else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Text(
-                        OpeningHours.rangesText(branch.hours[day].orEmpty()),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = weight,
-                    )
+                    // Geteilte Zeiten (Paffrath) untereinander statt mit "und" in einer
+                    // Zeile - das war lang und unruhig.
+                    Column(horizontalAlignment = Alignment.End) {
+                        OpeningHours.rangeLines(branch.hours[day].orEmpty()).forEach {
+                            Text(
+                                it,
+                                style = dayStyle,
+                                // Heute: Zeiten so hell wie der Tag selbst.
+                                color = if (isToday) MaterialTheme.colorScheme.onSurface
+                                else Color.Unspecified,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1161,6 +1210,58 @@ private fun rememberNow(): LocalDateTime {
     return now
 }
 
+/**
+ * Oeffnungsstatus als Etikett in Ampelfarbe plus Zeitpunkt daneben, z.B.
+ * "(● Geschlossen)  Öffnet heute 12:00". FlowRow bricht nur zwischen beiden
+ * Teilen um, nie mitten im Zeitpunkt. Fuer Screenreader ein Satz.
+ */
+@Composable
+private fun OpeningStatusLine(
+    status: OpeningHours.Status,
+    now: LocalDateTime,
+    modifier: Modifier = Modifier,
+) {
+    val color = openingStatusColor(status)
+    val label = OpeningHours.statusLabel(status)
+    val detail = OpeningHours.statusDetail(status, now)
+    FlowRow(
+        modifier = modifier.semantics(mergeDescendants = true) {
+            contentDescription = listOfNotNull(label, detail).joinToString(", ")
+        },
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            Modifier
+                .clip(CircleShape)
+                .background(color.copy(alpha = 0.12f))
+                .padding(start = 8.dp, end = 10.dp, top = 3.dp, bottom = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(color),
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.labelLargeEmphasized,
+                color = color,
+            )
+        }
+        if (detail != null) {
+            Text(
+                detail,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
 /** Gruen offen, orange kurz vor Schluss, rot geschlossen - wie bei der Frist-Ampel. */
 @Composable
 private fun openingStatusColor(status: OpeningHours.Status): Color {
@@ -1188,8 +1289,8 @@ private fun KeyValue(label: String, value: String, highlight: Boolean = false) {
         )
         Text(
             value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (highlight) FontWeight.Bold else FontWeight.Normal,
+            style = if (highlight) MaterialTheme.typography.bodyMediumEmphasized
+            else MaterialTheme.typography.bodyMedium,
             color = if (highlight) MaterialTheme.colorScheme.error
             else MaterialTheme.colorScheme.onSurface,
         )
@@ -1251,6 +1352,7 @@ private fun WatchlistCard(
         onToggle = onToggle,
         contentPadding = PaddingValues(start = 16.dp, end = 4.dp, bottom = 8.dp),
     ) {
+        if (items.isEmpty()) EmptyText("Die Merkliste ist leer")
         items.forEach { item ->
             val url = item.url
             Row(verticalAlignment = Alignment.CenterVertically) {

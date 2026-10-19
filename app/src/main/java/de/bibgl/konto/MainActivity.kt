@@ -112,6 +112,7 @@ class MainActivity : ComponentActivity() {
                             onOverviewBranchChanged = viewModel::setOverviewBranch,
                             onThemeModeChanged = viewModel::setThemeMode,
                             onDynamicColorChanged = viewModel::setDynamicColor,
+                            onHideEmptyCardsChanged = viewModel::setHideEmptyCards,
                         )
                     }
                 }

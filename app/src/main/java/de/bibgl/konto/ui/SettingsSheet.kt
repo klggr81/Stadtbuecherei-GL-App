@@ -52,6 +52,7 @@ fun SettingsSheet(
     onOverviewBranchChanged: (String) -> Unit,
     onThemeModeChanged: (ThemeMode) -> Unit,
     onDynamicColorChanged: (Boolean) -> Unit,
+    onHideEmptyCardsChanged: (Boolean) -> Unit,
 ) {
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
@@ -189,6 +190,26 @@ fun SettingsSheet(
                         onCheckedChange = onDynamicColorChanged,
                     )
                 }
+            }
+
+            Spacer(Modifier.height(16.dp))
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Leere Karten ausblenden", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Abholbereit, Vorgemerkt und Merkliste nur zeigen, wenn etwas drinsteht",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = state.hideEmptyCards,
+                    onCheckedChange = onHideEmptyCardsChanged,
+                )
             }
 
             Spacer(Modifier.height(24.dp))

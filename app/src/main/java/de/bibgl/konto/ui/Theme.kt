@@ -7,6 +7,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -16,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import de.bibgl.konto.data.ThemeMode
 
 /*
@@ -119,6 +121,24 @@ object DueColors {
     val okDark = Color(0xFF7FD1AC)
 }
 
+/*
+ * Schriftskala: Standard von Material 3, nur die betonten Stile (Expressive,
+ * "...Emphasized") eine Stufe kraeftiger. Ab Werk heben sie nur von Normal auf
+ * Medium (500) an - mit der Systemschrift ist das kaum zu sehen und war duenner
+ * als das fest gesetzte SemiBold vorher. Die UI nutzt Betonung nur ueber diese
+ * Stile, keine eigenen fontWeight-Werte.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private val BibTypography: Typography = Typography().let { base ->
+    base.copy(
+        bodyLargeEmphasized = base.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+        bodyMediumEmphasized = base.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+        labelLargeEmphasized = base.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+        // Hero-Moment (naechste Rueckgabe): gross und kraeftig.
+        headlineLargeEmphasized = base.headlineLarge.copy(fontWeight = FontWeight.SemiBold),
+    )
+}
+
 /** Dynamische Farben gibt es erst ab Android 12 - darunter wird der Schalter ausgeblendet. */
 val supportsDynamicColor: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
@@ -147,7 +167,11 @@ fun BibTheme(
     }
     // Material 3 Expressive: federnde Bewegungen (MotionScheme.expressive()) und
     // die Expressive-Varianten der Komponenten. API ist noch experimentell.
-    MaterialExpressiveTheme(colorScheme = colors, motionScheme = MotionScheme.expressive()) {
+    MaterialExpressiveTheme(
+        colorScheme = colors,
+        motionScheme = MotionScheme.expressive(),
+        typography = BibTypography,
+    ) {
         // Die Surface ist nicht bloss Deko: sie setzt LocalContentColor auf
         // onBackground. Ohne sie faellt jeder Text ohne eigene Farbangabe auf
         // Schwarz zurueck - im Dunkelmodus also schwarz auf schwarz. Bildschirme

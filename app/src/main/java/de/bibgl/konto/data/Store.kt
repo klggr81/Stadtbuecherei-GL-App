@@ -36,6 +36,7 @@ class Store(private val context: Context) {
         private const val K_OVERVIEW_BRANCH = "overview_branch"
         private const val K_THEME_MODE = "theme_mode"
         private const val K_DYNAMIC_COLOR = "dynamic_color"
+        private const val K_HIDE_EMPTY = "hide_empty_cards"
 
         // Schluessel der frueheren Einkonto-Version, nur noch fuer die Migration.
         private const val K_LEGACY_USER = "user"
@@ -230,6 +231,11 @@ class Store(private val context: Context) {
     var dynamicColor: Boolean
         get() = plain.getBoolean(K_DYNAMIC_COLOR, true)
         set(value) = plain.edit().putBoolean(K_DYNAMIC_COLOR, value).apply()
+
+    /** Abholbereit, Vorgemerkt und Merkliste nur zeigen, wenn etwas drinsteht. */
+    var hideEmptyCards: Boolean
+        get() = plain.getBoolean(K_HIDE_EMPTY, true)
+        set(value) = plain.edit().putBoolean(K_HIDE_EMPTY, value).apply()
 
     /**
      * Auf- oder zugeklappte Karten der Kontoansicht, z.B. "watchlist" -> true.
