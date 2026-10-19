@@ -7,6 +7,25 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-10-19
+
+### Neu
+- Einstellung „Leere Karten ausblenden“ (Standard an): ausgeschaltet zeigt die
+  App Abholbereit, Vorgemerkt und Merkliste auch dann, wenn sie leer sind.
+
+### Geändert
+- Übersicht neu aufgebaut: die nächste Rückgabe steht groß in einem eigenen,
+  farbig getönten Feld; Anzahl der Ausleihen und offene Gebühren stehen
+  klein in einer Zeile darunter.
+- Öffnungsstatus als farbiges Etikett mit der nächsten Öffnung daneben
+  („● Geschlossen  Öffnet heute 12:00“) – kürzer und ohne Umbruch mitten im Satz.
+- Öffnungszeiten: geteilte Zeiten (Paffrath) stehen untereinander, der heutige
+  Tag ist samt Zeiten hervorgehoben.
+- Schrift nach Material 3 Expressive: Hervorhebungen nutzen die betonten
+  Schriftstile.
+- Leere Karten starten zugeklappt.
+- Neue Screenshots in der README.
+
 ## [1.10.0] - 2026-10-19
 
 ### Neu
@@ -118,7 +137,8 @@ Erste veröffentlichte Version.
 - Mehrere Ausweise mit Konto-Umschalter.
 - Erinnerungen vor Fristende und Warnung vor Ausweisablauf.
 
-[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.1...HEAD
+[1.10.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.1...v1.10.0
 [1.9.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.8.2...v1.9.0
