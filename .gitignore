@@ -15,5 +15,5 @@ captures/
 *.keystore
 
 # Persoenliche Notizen, nicht im Repository.
-todo.local.md
+notes.local.md
 CLAUDE.local.md
