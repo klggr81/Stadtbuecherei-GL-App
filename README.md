@@ -85,6 +85,9 @@ Die App hat keinen Server und keine Analyse-Funktionen.
   (`EncryptedSharedPreferences`, Schlüssel im Android-Keystore)
 - Sie werden **ausschließlich an `stadtbuecherei-gl.de`** gesendet — an
   niemanden sonst
+- Die Übertragung läuft **immer verschlüsselt (HTTPS)**. Unverschlüsselte
+  Verbindungen sind in der App gesperrt, Formulare gehen nur an die
+  HTTPS-Adresse der Bücherei, und Umleitungen auf http werden nicht befolgt
 - Es werden keinerlei Daten an den Autor oder Dritte übertragen
 - Deinstallieren löscht alles
 

@@ -7,6 +7,16 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+## [1.10.4] - 2026-10-19
+
+### Sicherheit
+- Die App sendet Formulare – und damit Ausweisnummer und Passwort – nur noch
+  verschlüsselt an stadtbuecherei-gl.de, auch wenn eine (manipulierte) Seite
+  ein anderes Ziel angäbe.
+- Weiterleitungen von https auf http werden nicht mehr befolgt.
+- Unverschlüsselte Verbindungen (http) sind in der App ausdrücklich gesperrt,
+  auch auf Android 8, wo das System sie noch nicht von sich aus blockiert.
+
 ## [1.10.3] - 2026-10-19
 
 ### Geändert
@@ -164,7 +174,8 @@ Erste veröffentlichte Version.
 - Mehrere Ausweise mit Konto-Umschalter.
 - Erinnerungen vor Fristende und Warnung vor Ausweisablauf.
 
-[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.3...HEAD
+[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.4...HEAD
+[1.10.4]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.3...v1.10.4
 [1.10.3]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.2...v1.10.3
 [1.10.2]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.0...v1.10.1

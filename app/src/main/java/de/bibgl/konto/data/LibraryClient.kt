@@ -6,6 +6,7 @@ import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.FormBody
 import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -37,7 +38,9 @@ class LibraryException(message: String) : IOException(message)
 class LibraryClient {
 
     companion object {
-        const val BASE = "https://www.stadtbuecherei-gl.de"
+        /** Einziger Host, an den die App Formulare (und damit Zugangsdaten) sendet. */
+        const val HOST = "www.stadtbuecherei-gl.de"
+        const val BASE = "https://$HOST"
         const val LOGIN_URL = "$BASE/Login?returnurl=%2f&focusModule=login"
         const val ACCOUNT_URL = "$BASE/Mein-Konto"
 
@@ -79,6 +82,9 @@ class LibraryClient {
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .followRedirects(true)
+        // Keine Weiterleitung von https auf http: OkHttp wuerde bei 307/308 den
+        // POST-Body - beim Login also das Passwort - unverschluesselt erneut senden.
+        .followSslRedirects(false)
         .build()
 
     /** Zuletzt geladene Kontoseite - Quelle fuer VIEWSTATE und Postback-Ziele. */
@@ -125,8 +131,20 @@ class LibraryClient {
         return map
     }
 
-    private fun formAction(doc: Document): String =
-        doc.selectFirst("form")?.absUrl("action")?.ifEmpty { null } ?: lastUrl
+    /**
+     * Ziel des Formulars. Das Ziel stammt aus der Serverantwort - deshalb wird
+     * geprueft, dass es verschluesselt (https) zur Buecherei selbst fuehrt. Sonst
+     * koennten Ausweisnummer und Passwort an eine fremde oder unverschluesselte
+     * Adresse gehen, etwa bei einer manipulierten Seite.
+     */
+    private fun formAction(doc: Document): String {
+        val url = doc.selectFirst("form")?.absUrl("action")?.ifEmpty { null } ?: lastUrl
+        val target = url.toHttpUrlOrNull()
+        if (target == null || !target.isHttps || target.host != HOST) {
+            throw IOException("Unerwartetes Formularziel")
+        }
+        return url
+    }
 
     // ----------------------------------------------------------------- Login
 
