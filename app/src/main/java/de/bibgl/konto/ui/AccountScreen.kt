@@ -1111,13 +1111,20 @@ private fun OpeningHoursCard(now: LocalDateTime, expanded: Boolean, onToggle: ()
                 }
             }
         }
+        // Die Zeiten sind fest hinterlegt - der Stand zeigt, wie alt sie sein koennen.
         Text(
-            "Gesetzliche Feiertage sind berücksichtigt, Sonderschließungen nicht. " +
-                "Aktuelle Zeiten auf der Website der Stadt.",
+            "Stand: ${OpeningHours.AS_OF}. Gesetzliche Feiertage sind berücksichtigt, " +
+                "Sonderschließungen nicht.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 12.dp),
+        )
+        Text(
+            "Aktuelle Zeiten auf der Website der Stadt",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier
-                .padding(top = 12.dp)
+                .padding(top = 4.dp)
                 .clickable { uriHandler.openUri(OpeningHours.SOURCE_URL) },
         )
     }

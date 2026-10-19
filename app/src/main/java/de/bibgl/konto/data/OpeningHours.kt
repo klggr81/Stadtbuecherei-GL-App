@@ -10,14 +10,18 @@ import java.time.format.DateTimeFormatter
 /**
  * Oeffnungszeiten der Stadtbuechereien, fest hinterlegt.
  *
- * Quelle: [SOURCE_URL] (Stand Oktober 2026). Die Seite ist reines HTML ohne
+ * Quelle: [SOURCE_URL] (Stand [AS_OF]). Die Seite ist reines HTML ohne
  * Schnittstelle und aendert sich selten - deshalb kein Abruf zur Laufzeit.
+ * Beim Aktualisieren der Zeiten auch [AS_OF] anpassen - die App zeigt es an.
  * Gesetzliche Feiertage in NRW gelten als geschlossen; Sonderschliessungen
  * (z.B. zwischen den Jahren) kennt die App nicht.
  */
 object OpeningHours {
 
     const val SOURCE_URL = "https://www.bergischgladbach.de/oeffnungszeiten-standorte-kontakt.aspx"
+
+    /** Wann die Zeiten zuletzt mit [SOURCE_URL] abgeglichen wurden. */
+    const val AS_OF = "Oktober 2026"
 
     val ZONE: ZoneId = ZoneId.of("Europe/Berlin")
 
