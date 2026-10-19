@@ -66,17 +66,23 @@ private val LightColors = lightColorScheme(
     surfaceContainerHighest = Color(0xFFDEE4DF),
 )
 
+/*
+ * Dunkel bewusst kontrastreicher als der Tonal-Spot-Standard (Wunsch 1.10.2:
+ * "zu verwaschen"): Hintergrund fast schwarz (Ton 3 statt 6), Texte und
+ * Akzent heller (Werte aus der Medium-Contrast-Variante). Die Container-Rollen
+ * bleiben Standard, damit Symbol-Flaechen und Etiketten nicht grau werden.
+ */
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF89D6B9),
+    primary = Color(0xFF9FECCE),
     onPrimary = Color(0xFF003829),
     primaryContainer = Color(0xFF00513D),
     onPrimaryContainer = Color(0xFFA5F2D4),
     inversePrimary = Color(0xFF176B53),
-    secondary = Color(0xFFB2CCC0),
+    secondary = Color(0xFFC8E2D6),
     onSecondary = Color(0xFF1E352C),
     secondaryContainer = Color(0xFF344C42),
     onSecondaryContainer = Color(0xFFCEE9DC),
-    tertiary = Color(0xFFA7CCE1),
+    tertiary = Color(0xFFBDE2F7),
     onTertiary = Color(0xFF0B3445),
     tertiaryContainer = Color(0xFF274B5D),
     onTertiaryContainer = Color(0xFFC3E8FE),
@@ -84,22 +90,22 @@ private val DarkColors = darkColorScheme(
     onError = Color(0xFF690005),
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
-    background = Color(0xFF0F1512),
-    onBackground = Color(0xFFDEE4DF),
-    surface = Color(0xFF0F1512),
-    onSurface = Color(0xFFDEE4DF),
+    background = Color(0xFF070C0A),
+    onBackground = Color(0xFFECF2ED),
+    surface = Color(0xFF070C0A),
+    onSurface = Color(0xFFECF2ED),
     surfaceVariant = Color(0xFF404944),
-    onSurfaceVariant = Color(0xFFBFC9C3),
+    onSurfaceVariant = Color(0xFFD5DFD8),
     surfaceTint = Color(0xFF89D6B9),
     inverseSurface = Color(0xFFDEE4DF),
     inverseOnSurface = Color(0xFF2C322F),
-    outline = Color(0xFF89938D),
+    outline = Color(0xFFAAB4AE),
     outlineVariant = Color(0xFF404944),
     scrim = Color(0xFF000000),
     surfaceBright = Color(0xFF343B37),
-    surfaceDim = Color(0xFF0F1512),
-    surfaceContainerLowest = Color(0xFF0A0F0D),
-    surfaceContainerLow = Color(0xFF171D1A),
+    surfaceDim = Color(0xFF070C0A),
+    surfaceContainerLowest = Color(0xFF040806),
+    surfaceContainerLow = Color(0xFF131916),
     surfaceContainer = Color(0xFF1B211E),
     surfaceContainerHigh = Color(0xFF252B28),
     surfaceContainerHighest = Color(0xFF303633),

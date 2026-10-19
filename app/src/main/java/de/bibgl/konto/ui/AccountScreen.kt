@@ -99,6 +99,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -705,20 +706,7 @@ private fun OverviewCard(
             // beantwortet "kann ich jetzt hin?". Aufgebaut wie ein Listeneintrag:
             // Symbol in Expressive-Form links, Name und Status daneben.
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier
-                        .size(44.dp)
-                        .clip(MaterialShapes.Cookie9Sided.toShape())
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Outlined.LocalLibrary,
-                        null,
-                        Modifier.size(22.dp),
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
-                }
+                ShapedIcon(Icons.Outlined.LocalLibrary)
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(
@@ -732,15 +720,6 @@ private fun OverviewCard(
                     )
                 }
             }
-            if (cardWarning != null) {
-                Spacer(Modifier.height(12.dp))
-                NoticeLine(
-                    icon = Icons.Outlined.CreditCard,
-                    text = cardWarning,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-
             // Die naechste Frist ist das Wichtigste auf der Karte: eigener Behaelter,
             // leicht in der Ampelfarbe getoent (wie der Countdown-Chip), grosse Schrift.
             if (next != null) {
@@ -772,59 +751,49 @@ private fun OverviewCard(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-            // Bricht auf schmalen Geraeten zwischen den beiden Angaben um, nie mittendrin.
-            // Eingerueckt wie der Text im Hero-Behaelter darueber - eine gemeinsame Kante.
-            FlowRow(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                InlineStat("Ausgeliehen", account.loans.size.toString())
-                InlineStat(
-                    "Offene Gebühren",
-                    account.fees.open,
-                    valueColor = if (account.fees.hasOpenFees) MaterialTheme.colorScheme.error
-                    else MaterialTheme.colorScheme.onSurface,
-                )
+            // Ausweis laeuft bald ab: aufgebaut wie die Buecherei-Zeile oben (Symbol in
+            // Expressive-Form, Text daneben), damit beide an denselben Kanten stehen.
+            // "Ausgeliehen" und "Offene Gebuehren" stehen nicht mehr hier - die Karten
+            // darunter zeigen beides schon im Kopf.
+            if (cardWarning != null) {
+                Spacer(Modifier.height(16.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    ShapedIcon(
+                        Icons.Outlined.CreditCard,
+                        container = MaterialTheme.colorScheme.errorContainer,
+                        content = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        cardWarning,
+                        style = MaterialTheme.typography.bodyMediumEmphasized,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         }
     }
 }
 
-/** Kleine Angabe in einer Zeile: "Ausgeliehen 3", "Offene Gebühren 0,00 EUR". */
+/**
+ * Symbol in der Expressive-Form "Cookie9Sided" auf getoenter Flaeche - fuer die
+ * Uebersicht, die Kartenkoepfe und fehlende Cover, damit alle gleich aussehen.
+ */
 @Composable
-private fun InlineStat(
-    label: String,
-    value: String,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface,
+private fun ShapedIcon(
+    icon: ImageVector,
+    size: Dp = 44.dp,
+    container: Color = MaterialTheme.colorScheme.secondaryContainer,
+    content: Color = MaterialTheme.colorScheme.onSecondaryContainer,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            value,
-            style = MaterialTheme.typography.bodyMediumEmphasized,
-            color = valueColor,
-        )
-    }
-}
-
-/** Kurzer farbiger Hinweis mit Symbol, z.B. Oeffnungsstatus oder Ausweisablauf. */
-@Composable
-private fun NoticeLine(icon: ImageVector, text: String, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, null, Modifier.size(18.dp), tint = color)
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text,
-            style = MaterialTheme.typography.bodyMediumEmphasized,
-            color = color,
-        )
+    Box(
+        Modifier
+            .size(size)
+            .clip(MaterialShapes.Cookie9Sided.toShape())
+            .background(container),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, null, Modifier.size(size / 2), tint = content)
     }
 }
 
@@ -866,14 +835,7 @@ private fun LoanCard(loan: Loan, today: LocalDate, busy: Boolean, onRenew: () ->
     ) {
         Column(Modifier.padding(12.dp)) {
             Row {
-                AsyncImage(
-                    model = loan.coverUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(width = 54.dp, height = 78.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                )
+                Cover(loan)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     if (loan.mediaType.isNotBlank()) {
@@ -906,6 +868,38 @@ private fun LoanCard(loan: Loan, today: LocalDate, busy: Boolean, onRenew: () ->
 
             Spacer(Modifier.height(8.dp))
             RenewRow(loan, busy, onRenew)
+        }
+    }
+}
+
+/**
+ * Cover des Mediums. Die Bibliothek verlinkt nur Amazon-Bilder ueber die ISBN;
+ * ohne ISBN (z.B. Tonies, Spiele) liefert Amazon ein leeres 1x1-Bild. Dann -
+ * und wenn gar kein Cover da ist - steht das Symbol der Medienart da, statt
+ * eines grauen Kastens. Andere Bildquellen werden bewusst nicht abgefragt.
+ */
+@Composable
+private fun Cover(loan: Loan) {
+    var missing by remember(loan.coverUrl) { mutableStateOf(loan.coverUrl == null) }
+    Box(
+        Modifier
+            .size(width = 54.dp, height = 78.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (missing) {
+            ShapedIcon(mediaTypeIcon(loan.mediaType), size = 40.dp)
+        } else {
+            AsyncImage(
+                model = loan.coverUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                onSuccess = { state ->
+                    if (state.painter.intrinsicSize.width <= 2f) missing = true
+                },
+                onError = { missing = true },
+            )
         }
     }
 }
@@ -1058,7 +1052,7 @@ private fun CollapsibleCard(
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(icon, null)
+                ShapedIcon(icon, size = 40.dp)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
