@@ -7,6 +7,8 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-19
+
 ### Neu
 - Einstellungen → Darstellung: Hell, Dunkel oder wie das System.
 - Schalter „Dynamische Farben“ (ab Android 12): an passt sich die App wie
@@ -116,7 +118,8 @@ Erste veröffentlichte Version.
 - Mehrere Ausweise mit Konto-Umschalter.
 - Erinnerungen vor Fristende und Warnung vor Ausweisablauf.
 
-[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.1...HEAD
+[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.1...v1.10.0
 [1.9.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.8.2...v1.9.0
 [1.8.2]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.8.1...v1.8.2

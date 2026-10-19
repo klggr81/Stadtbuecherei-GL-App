@@ -68,9 +68,10 @@ Versionen sollten funktionieren, sind aber nicht ausprobiert.
 | **Vormerkungen** | Vorbestellte Medien und was gerade abholbereit ist |
 | **Merkliste** | Gemerkte Titel (bis zu 20, bei mehr ein Hinweis mit Link zur Website), Antippen öffnet die Detailseite, Entfernen per Lesezeichen-Symbol |
 | **Ausweis** | Eigene Karte mit Gültig-bis-Datum unter der Ausweisnummer, Warnung in der Übersicht ab 60 Tagen vor Ablauf, Benachrichtigung 30, 14 und 7 Tage vorher sowie am Ablauftag |
-| **Öffnungszeiten** | Zeiten aller drei Standorte; oben in der Übersicht, ob die gewählte Bücherei (Einstellungen, Standard: Forum) gerade geöffnet hat und bis wann (bestimmt beim Öffnen der App, gesetzliche Feiertage in NRW berücksichtigt) |
+| **Öffnungszeiten** | Zeiten aller drei Standorte; oben in der Übersicht, ob die gewählte Bücherei (Einstellungen, Standard: Forum) gerade geöffnet hat und bis wann (bestimmt beim Öffnen der App, gesetzliche Feiertage in NRW berücksichtigt). Die Karte nennt, auf welchem Stand die Zeiten sind |
 | **Aufklappbare Karten** | Jeder Bereich lässt sich auf- und zuklappen, die App merkt sich die Auswahl |
 | **Erinnerungen** | Täglicher Hintergrund-Check, Benachrichtigung einstellbar: 1–14 Tage vor Fristende. Alle Meldungen kommen frühestens um 9 Uhr, nie nachts |
+| **Darstellung** | Hell, Dunkel oder wie das System; ab Android 12 wahlweise mit den Farben des Hintergrundbilds oder den eigenen grünen Farben der App |
 | **Mehrere Ausweise** | Konto-Umschalter in der Titelleiste, jedes Konto mit eigener Vorschau und eigenen Erinnerungen |
 
 Ohne Netz zeigt die App den zuletzt geladenen Stand, damit die Fristen auch

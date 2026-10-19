@@ -92,7 +92,7 @@ lässt sich alles in den Einstellungen der App oder im System.
 
 ## Technik
 
-Kotlin · Jetpack Compose (Material 3) · OkHttp · Jsoup · WorkManager ·
+Kotlin · Jetpack Compose (Material 3 Expressive) · OkHttp · Jsoup · WorkManager ·
 EncryptedSharedPreferences · minSdk 26 · Gebaut mit GitHub Actions
 
 ## Signierung und Releases
