@@ -3,7 +3,10 @@ package de.bibgl.konto.ui
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -127,6 +130,7 @@ fun ThemeMode.isDark(): Boolean = when (this) {
     ThemeMode.DARK -> true
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BibTheme(
     dark: Boolean = isSystemInDarkTheme(),
@@ -141,7 +145,9 @@ fun BibTheme(
         dark -> DarkColors
         else -> LightColors
     }
-    MaterialTheme(colorScheme = colors) {
+    // Material 3 Expressive: federnde Bewegungen (MotionScheme.expressive()) und
+    // die Expressive-Varianten der Komponenten. API ist noch experimentell.
+    MaterialExpressiveTheme(colorScheme = colors, motionScheme = MotionScheme.expressive()) {
         // Die Surface ist nicht bloss Deko: sie setzt LocalContentColor auf
         // onBackground. Ohne sie faellt jeder Text ohne eigene Farbangabe auf
         // Schwarz zurueck - im Dunkelmodus also schwarz auf schwarz. Bildschirme

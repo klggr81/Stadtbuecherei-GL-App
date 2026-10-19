@@ -16,7 +16,9 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.LocalLibrary
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +44,7 @@ import androidx.compose.ui.unit.dp
  * weiterer Ausweise - im zweiten Fall ([isAdditional]) laesst sich der Vorgang
  * abbrechen, ohne die bereits hinterlegten Konten zu verlieren.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LoginScreen(
     state: UiState,
@@ -123,6 +126,7 @@ fun LoginScreen(
         Button(
             onClick = { onLogin(user, password) },
             enabled = !state.loading,
+            shapes = ButtonDefaults.shapes(),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 24.dp),

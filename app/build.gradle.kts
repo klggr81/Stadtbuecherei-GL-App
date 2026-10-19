@@ -7,7 +7,9 @@ plugins {
 
 android {
     namespace = "de.bibgl.konto"
-    compileSdk = 35
+    // 37 verlangt material3 1.5 (Expressive). targetSdk bleibt bewusst 35 -
+    // ein hoeheres targetSdk aendert Laufzeitverhalten und waere ein eigener Schritt.
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "de.bibgl.konto"
@@ -79,7 +81,7 @@ android {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
+    val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
     implementation(composeBom)
 
     implementation("androidx.core:core-ktx:1.15.0")
@@ -90,7 +92,9 @@ dependencies {
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
+    // Expressive-Komponenten (LoadingIndicator, MaterialExpressiveTheme usw.) gibt es
+    // erst ab 1.5 - die BOM bringt nur 1.4. Auf die stabile 1.5 wechseln, sobald da.
+    implementation("androidx.compose.material3:material3:1.5.0-beta01")
     implementation("androidx.compose.material:material-icons-extended")
     debugImplementation("androidx.compose.ui:ui-tooling")
 

@@ -7,6 +7,21 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+### Neu
+- Einstellungen → Darstellung: Hell, Dunkel oder wie das System.
+- Schalter „Dynamische Farben“ (ab Android 12): an passt sich die App wie
+  bisher den Farben des Hintergrundbilds an, aus nutzt sie ihre eigenen grünen
+  Farben.
+- Die Karte „Öffnungszeiten“ nennt, auf welchem Stand die Zeiten sind.
+
+### Geändert
+- Neues Design nach Material 3 Expressive: lebendigere Bewegungen, Buttons
+  verformen sich beim Antippen, neue Ladeanzeige beim Aktualisieren.
+- Das eigene Farbschema ist vollständig ausgearbeitet; Kartenflächen und
+  Umrisse passen jetzt zum Grün der App.
+- Orange und Gelb der Fristen-Ampel sind im hellen Design kräftiger und
+  besser lesbar.
+
 ## [1.9.1] - 2026-10-17
 
 ### Neu

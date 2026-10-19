@@ -52,7 +52,10 @@ import androidx.compose.material.icons.outlined.Toys
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,6 +72,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,7 +103,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AccountScreen(
     state: UiState,
@@ -276,17 +281,27 @@ fun AccountScreen(
             )
         },
     ) { padding ->
+        val pullState = rememberPullToRefreshState()
         PullToRefreshBox(
             isRefreshing = state.loading,
             onRefresh = onRefresh,
+            state = pullState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
+            // Expressive: sich verformende Ladeanzeige statt des Kreises.
+            indicator = {
+                PullToRefreshDefaults.LoadingIndicator(
+                    state = pullState,
+                    isRefreshing = state.loading,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                )
+            },
         ) {
             val account = state.account
             if (account == null) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    if (state.loading) CircularProgressIndicator()
+                    if (state.loading) LoadingIndicator()
                     else Text(state.error ?: "Keine Daten")
                 }
             } else {
@@ -312,6 +327,7 @@ private const val S_HOURS = "opening_hours"
 private const val S_WATCHLIST = "watchlist"
 private const val S_CARD = "library_card"
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AccountContent(
     account: Account,
@@ -386,6 +402,7 @@ private fun AccountContent(
                         if (renewable.size > 1) {
                             FilledTonalButton(
                                 onClick = onRenewAll,
+                                shapes = ButtonDefaults.shapes(),
                                 enabled = state.renewing.isEmpty(),
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
@@ -783,6 +800,7 @@ private fun Stat(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LoanCard(loan: Loan, today: LocalDate, busy: Boolean, onRenew: () -> Unit) {
     val uriHandler = LocalUriHandler.current
@@ -910,7 +928,7 @@ private fun RenewRow(loan: Loan, busy: Boolean, onRenew: () -> Unit) {
 
         // Bei unbekanntem Status trotzdem anbieten - der Server entscheidet ohnehin.
         if (loan.renewable != false && loan.extendTarget != null) {
-            TextButton(onClick = onRenew, enabled = !busy) {
+            TextButton(onClick = onRenew, enabled = !busy, shapes = ButtonDefaults.shapes()) {
                 if (busy) {
                     CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                 } else {
