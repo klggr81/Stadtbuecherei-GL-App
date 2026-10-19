@@ -15,8 +15,8 @@ android {
         applicationId = "de.bibgl.konto"
         minSdk = 26
         targetSdk = 35
-        versionCode = 15
-        versionName = "1.10.2"
+        versionCode = 16
+        versionName = "1.10.3"
     }
 
     /*

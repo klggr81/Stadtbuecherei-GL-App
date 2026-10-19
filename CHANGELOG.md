@@ -7,6 +7,18 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+## [1.10.3] - 2026-10-19
+
+### Geändert
+- Jede Karte und jede Medienart hat ein Symbol in eigener Farbe. Die Palette
+  mit zehn Farben (Limette, Himbeere, Graugrün, Mint, Koralle, Senf, Petrol,
+  Ozeanblau, Lavendel, Pflaume) ist im hellen wie im dunklen Design gut
+  sichtbar – vorher hoben sich die Symbole im hellen Design kaum ab.
+- Die Karten unter der Übersicht stehen als zusammenhängende Liste: eng
+  gestapelt, außen stark und innen leicht gerundet.
+- Öffnungszeiten: die nächste Öffnung bzw. „bis …“ steht unter dem Etikett.
+- Medien ohne Cover zeigen das Symbol ihrer Medienart in deren Farbe.
+
 ## [1.10.2] - 2026-10-19
 
 ### Geändert
@@ -152,7 +164,8 @@ Erste veröffentlichte Version.
 - Mehrere Ausweise mit Konto-Umschalter.
 - Erinnerungen vor Fristende und Warnung vor Ausweisablauf.
 
-[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.2...HEAD
+[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.3...HEAD
+[1.10.3]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.2...v1.10.3
 [1.10.2]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.9.1...v1.10.0

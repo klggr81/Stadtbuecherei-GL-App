@@ -14,7 +14,7 @@ Frist abläuft.
 
 | Übersicht (hell) | Übersicht (dunkel) | Öffnungszeiten | Einstellungen |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/01-uebersicht-hell.jpg" width="200" alt="Übersicht mit nächster Rückgabe und ausgeliehenen Medien im hellen Design"> | <img src="docs/screenshots/02-uebersicht-dunkel.jpg" width="200" alt="Dieselbe Übersicht im dunklen Design"> | <img src="docs/screenshots/03-oeffnungszeiten.jpg" width="200" alt="Öffnungszeiten der Standorte mit aktuellem Status"> | <img src="docs/screenshots/04-einstellungen.jpg" width="200" alt="Einstellungen für Erinnerungen, Bücherei und Darstellung"> |
+| <img src="docs/screenshots/01-uebersicht-hell.jpg" width="200" alt="Übersicht mit nächster Rückgabe und den Karten mit farbigen Symbolen im hellen Design"> | <img src="docs/screenshots/02-uebersicht-dunkel.jpg" width="200" alt="Übersicht mit aufgeklappten Ausleihen im dunklen Design"> | <img src="docs/screenshots/03-oeffnungszeiten.jpg" width="200" alt="Öffnungszeiten der Standorte mit aktuellem Status"> | <img src="docs/screenshots/04-einstellungen.jpg" width="200" alt="Einstellungen für Erinnerungen, Bücherei und Darstellung"> |
 
 
 ## Installation
@@ -61,7 +61,7 @@ Versionen sollten funktionieren, sind aber nicht ausprobiert.
 
 | Funktion | Details |
 |---|---|
-| **Ausgeliehene Medien** | Titel, Verfasser, Medienart (Buch, Bilderbuch, Tonie, Spiel …), Zweigstelle, Cover (ohne Cover das Symbol der Medienart). Antippen öffnet die Detailseite im Browser |
+| **Ausgeliehene Medien** | Titel, Verfasser, Medienart (Buch, Bilderbuch, Tonie, Spiel …), Zweigstelle, Cover (ohne Cover das farbige Symbol der Medienart). Antippen öffnet die Detailseite im Browser |
 | **Countdown** | Farbige Ampel bis zur Rückgabe: rot überfällig, orange ≤ 2 Tage, gelb ≤ 7 Tage, grün ab 8 Tagen |
 | **Verlängern** | Einzeln oder alle verlängerbaren Medien auf einmal. Nicht verlängerbare Medien zeigen den Grund („Die maximale Anzahl der Verlängerungen ist erreicht.") |
 | **Gebühren** | Offene Gebühren, Einzahlungen, Saldo, Einzelposten |
