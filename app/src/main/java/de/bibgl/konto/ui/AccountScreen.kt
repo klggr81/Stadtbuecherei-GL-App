@@ -83,16 +83,19 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentDescription
@@ -357,74 +360,94 @@ private fun AccountContent(
     fun toggle(key: String, default: Boolean): () -> Unit =
         { onSectionToggled(key, !expanded(key, default)) }
 
+    // Abholbereit, Vorgemerkt und Merkliste: leer ausgeblendet, ausser der
+    // Nutzer will alle Karten sehen (Einstellung "Leere Karten ausblenden").
+    val showEmpty = !state.hideEmptyCards
+
+    // Sichtbare Karten der Gruppe in Reihenfolge - fuer die Ecken (aussen/innen).
+    val groupKeys = buildList {
+        if (showEmpty || !account.readyForPickup.isEmpty) add(S_PICKUP)
+        add(S_LOANS)
+        if (showEmpty || !account.reservations.isEmpty) add(S_RESERVATIONS)
+        if (showEmpty || account.watchlist.isNotEmpty()) add(S_WATCHLIST)
+        add(S_FEES)
+        add(S_HOURS)
+        add(S_CARD)
+    }
+    fun shapeFor(key: String) = groupShape(groupKeys.indexOf(key), groupKeys.size)
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         val error = state.error
         if (error != null) {
-            item { ErrorBanner(error) }
+            item { Box(Modifier.padding(bottom = 9.dp)) { ErrorBanner(error) } }
         }
 
         item(key = "overview") {
-            OverviewCard(account, today, now, OpeningHours.branch(state.overviewBranchId))
+            Box(Modifier.padding(bottom = 9.dp)) {
+                OverviewCard(account, today, now, OpeningHours.branch(state.overviewBranchId))
+            }
         }
-
-        // Abholbereit, Vorgemerkt und Merkliste: leer ausgeblendet, ausser der
-        // Nutzer will alle Karten sehen (Einstellung "Leere Karten ausblenden").
-        val showEmpty = !state.hideEmptyCards
 
         if (showEmpty || !account.readyForPickup.isEmpty) {
             item(key = S_PICKUP) {
-                CollapsibleCard(
-                    icon = Icons.Outlined.Inventory2,
-                    title = "Abholbereit",
-                    count = account.readyForPickup.rows.size,
-                    // Leer startet die Karte zugeklappt - sie wuerde nur Platz kosten.
-                    expanded = expanded(S_PICKUP, !account.readyForPickup.isEmpty),
-                    onToggle = toggle(S_PICKUP, !account.readyForPickup.isEmpty),
-                ) {
-                    if (account.readyForPickup.isEmpty) EmptyText("Nichts abholbereit")
-                    else TableContent(account.readyForPickup)
+                GroupItem(shapeFor(S_PICKUP)) {
+                    CollapsibleCard(
+                        icon = Icons.Outlined.Inventory2,
+                        iconColor = IconPalette.Lime,
+                        title = "Abholbereit",
+                        count = account.readyForPickup.rows.size,
+                        // Leer startet die Karte zugeklappt - sie wuerde nur Platz kosten.
+                        expanded = expanded(S_PICKUP, !account.readyForPickup.isEmpty),
+                        onToggle = toggle(S_PICKUP, !account.readyForPickup.isEmpty),
+                    ) {
+                        if (account.readyForPickup.isEmpty) EmptyText("Nichts abholbereit")
+                        else TableContent(account.readyForPickup)
+                    }
                 }
             }
         }
 
         item(key = S_LOANS) {
-            CollapsibleCard(
-                icon = Icons.Outlined.MenuBook,
-                title = "Ausgeliehen",
-                count = loans.size,
-                expanded = expanded(S_LOANS, true),
-                onToggle = toggle(S_LOANS, true),
-                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 8.dp),
-            ) {
-                if (loans.isEmpty()) {
-                    EmptyText("Nichts ausgeliehen", Modifier.padding(horizontal = 8.dp))
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        loans.forEach { loan ->
-                            key(loan.copyId) {
-                                LoanCard(
-                                    loan = loan,
-                                    today = today,
-                                    busy = loan.copyId in state.renewing,
-                                    onRenew = { onRenew(loan.copyId) },
-                                )
+            GroupItem(shapeFor(S_LOANS)) {
+                CollapsibleCard(
+                    icon = Icons.Outlined.MenuBook,
+                    iconColor = IconPalette.Raspberry,
+                    title = "Ausgeliehen",
+                    count = loans.size,
+                    expanded = expanded(S_LOANS, true),
+                    onToggle = toggle(S_LOANS, true),
+                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                ) {
+                    if (loans.isEmpty()) {
+                        EmptyText("Nichts ausgeliehen", Modifier.padding(horizontal = 8.dp))
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            loans.forEach { loan ->
+                                key(loan.copyId) {
+                                    LoanCard(
+                                        loan = loan,
+                                        today = today,
+                                        busy = loan.copyId in state.renewing,
+                                        onRenew = { onRenew(loan.copyId) },
+                                    )
+                                }
                             }
-                        }
-                        val renewable = account.renewableLoans
-                        if (renewable.size > 1) {
-                            FilledTonalButton(
-                                onClick = onRenewAll,
-                                shapes = ButtonDefaults.shapes(),
-                                enabled = state.renewing.isEmpty(),
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Icon(Icons.Outlined.Autorenew, null, Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Alle ${renewable.size} verlängerbaren verlängern")
+                            val renewable = account.renewableLoans
+                            if (renewable.size > 1) {
+                                FilledTonalButton(
+                                    onClick = onRenewAll,
+                                    shapes = ButtonDefaults.shapes(),
+                                    enabled = state.renewing.isEmpty(),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Icon(Icons.Outlined.Autorenew, null, Modifier.size(18.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Alle ${renewable.size} verlängerbaren verlängern")
+                                }
                             }
                         }
                     }
@@ -434,66 +457,78 @@ private fun AccountContent(
 
         if (showEmpty || !account.reservations.isEmpty) {
             item(key = S_RESERVATIONS) {
-                CollapsibleCard(
-                    icon = Icons.Outlined.Schedule,
-                    title = "Vorgemerkt",
-                    count = account.reservations.rows.size,
-                    expanded = expanded(S_RESERVATIONS, !account.reservations.isEmpty),
-                    onToggle = toggle(S_RESERVATIONS, !account.reservations.isEmpty),
-                ) {
-                    if (account.reservations.isEmpty) EmptyText("Keine Vormerkungen")
-                    else TableContent(account.reservations)
+                GroupItem(shapeFor(S_RESERVATIONS)) {
+                    CollapsibleCard(
+                        icon = Icons.Outlined.Schedule,
+                        iconColor = IconPalette.Ocean,
+                        title = "Vorgemerkt",
+                        count = account.reservations.rows.size,
+                        expanded = expanded(S_RESERVATIONS, !account.reservations.isEmpty),
+                        onToggle = toggle(S_RESERVATIONS, !account.reservations.isEmpty),
+                    ) {
+                        if (account.reservations.isEmpty) EmptyText("Keine Vormerkungen")
+                        else TableContent(account.reservations)
+                    }
                 }
             }
         }
 
         if (showEmpty || account.watchlist.isNotEmpty()) {
             item(key = S_WATCHLIST) {
-                WatchlistCard(
-                    items = account.watchlist,
-                    total = account.watchlistTotal,
-                    removing = state.removingWatch,
-                    onRemove = onRemoveFromWatchlist,
-                    expanded = expanded(S_WATCHLIST, false),
-                    onToggle = toggle(S_WATCHLIST, false),
-                )
+                GroupItem(shapeFor(S_WATCHLIST)) {
+                    WatchlistCard(
+                        items = account.watchlist,
+                        total = account.watchlistTotal,
+                        removing = state.removingWatch,
+                        onRemove = onRemoveFromWatchlist,
+                        expanded = expanded(S_WATCHLIST, false),
+                        onToggle = toggle(S_WATCHLIST, false),
+                    )
+                }
             }
         }
 
         // Ohne offene Gebuehren ist die Karte uninteressant und startet zugeklappt.
         val feesDefault = account.fees.hasOpenFees
         item(key = S_FEES) {
-            CollapsibleCard(
-                icon = Icons.Outlined.Euro,
-                title = "Gebühren",
-                subtitle = "${account.fees.open} offen",
-                subtitleColor = if (account.fees.hasOpenFees) MaterialTheme.colorScheme.error
-                else null,
-                expanded = expanded(S_FEES, feesDefault),
-                onToggle = toggle(S_FEES, feesDefault),
-            ) {
-                FeesContent(account)
+            GroupItem(shapeFor(S_FEES)) {
+                CollapsibleCard(
+                    icon = Icons.Outlined.Euro,
+                    iconColor = IconPalette.Mustard,
+                    title = "Gebühren",
+                    subtitle = "${account.fees.open} offen",
+                    subtitleColor = if (account.fees.hasOpenFees) MaterialTheme.colorScheme.error
+                    else null,
+                    expanded = expanded(S_FEES, feesDefault),
+                    onToggle = toggle(S_FEES, feesDefault),
+                ) {
+                    FeesContent(account)
+                }
             }
         }
 
         item(key = S_HOURS) {
-            OpeningHoursCard(
-                now = now,
-                expanded = expanded(S_HOURS, false),
-                onToggle = toggle(S_HOURS, false),
-            )
+            GroupItem(shapeFor(S_HOURS)) {
+                OpeningHoursCard(
+                    now = now,
+                    expanded = expanded(S_HOURS, false),
+                    onToggle = toggle(S_HOURS, false),
+                )
+            }
         }
 
         item(key = S_CARD) {
-            LibraryCardCard(
-                account = account,
-                today = today,
-                expanded = expanded(S_CARD, false),
-                onToggle = toggle(S_CARD, false),
-            )
+            GroupItem(shapeFor(S_CARD)) {
+                LibraryCardCard(
+                    account = account,
+                    today = today,
+                    expanded = expanded(S_CARD, false),
+                    onToggle = toggle(S_CARD, false),
+                )
+            }
         }
 
-        item { FooterNote(account) }
+        item { Box(Modifier.padding(top = 9.dp)) { FooterNote(account) } }
     }
 }
 
@@ -645,6 +680,7 @@ private fun LibraryCardCard(
     // in der eingeklappten Karte verschwindet; aufgeklappt steht sie unter der Nummer.
     CollapsibleCard(
         icon = Icons.Outlined.CreditCard,
+        iconColor = IconPalette.Coral,
         title = "Ausweis",
         subtitle = if (expanded) null else validity ?: account.cardNumber,
         subtitleColor = if (validity != null) validityColor else null,
@@ -760,8 +796,10 @@ private fun OverviewCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ShapedIcon(
                         Icons.Outlined.CreditCard,
-                        container = MaterialTheme.colorScheme.errorContainer,
-                        content = MaterialTheme.colorScheme.onErrorContainer,
+                        colors = IconColor(
+                            MaterialTheme.colorScheme.errorContainer,
+                            MaterialTheme.colorScheme.onErrorContainer,
+                        ),
                     )
                     Spacer(Modifier.width(12.dp))
                     Text(
@@ -783,18 +821,41 @@ private fun OverviewCard(
 private fun ShapedIcon(
     icon: ImageVector,
     size: Dp = 44.dp,
-    container: Color = MaterialTheme.colorScheme.secondaryContainer,
-    content: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    colors: IconColor = IconPalette.Mint,
 ) {
     Box(
         Modifier
             .size(size)
             .clip(MaterialShapes.Cookie9Sided.toShape())
-            .background(container),
+            .background(colors.container),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, null, Modifier.size(size / 2), tint = content)
+        Icon(icon, null, Modifier.size(size / 2), tint = colors.content)
     }
+}
+
+/*
+ * Die Karten unter der Uebersicht bilden eine Gruppe wie eine Expressive-Liste:
+ * eng gestapelt, aussen stark gerundet, innen kleine Ecken. Die Position in der
+ * Gruppe kommt per CompositionLocal, damit CollapsibleCard sie ohne zusaetzliche
+ * Parameter durch WatchlistCard, OpeningHoursCard usw. erhaelt.
+ */
+private val LocalGroupShape = staticCompositionLocalOf<Shape?> { null }
+
+private fun groupShape(index: Int, count: Int): Shape {
+    val outer = 24.dp
+    val inner = 6.dp
+    return RoundedCornerShape(
+        topStart = if (index == 0) outer else inner,
+        topEnd = if (index == 0) outer else inner,
+        bottomStart = if (index == count - 1) outer else inner,
+        bottomEnd = if (index == count - 1) outer else inner,
+    )
+}
+
+@Composable
+private fun GroupItem(shape: Shape, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalGroupShape provides shape, content = content)
 }
 
 @Composable
@@ -889,7 +950,7 @@ private fun Cover(loan: Loan) {
         contentAlignment = Alignment.Center,
     ) {
         if (missing) {
-            ShapedIcon(mediaTypeIcon(loan.mediaType), size = 40.dp)
+            ShapedIcon(mediaTypeIcon(loan.mediaType), size = 40.dp, colors = mediaTypeColor(loan.mediaType))
         } else {
             AsyncImage(
                 model = loan.coverUrl,
@@ -925,24 +986,31 @@ private fun MediaTypeLabel(mediaType: String) {
     }
 }
 
+private fun mediaTypeIcon(mediaType: String): ImageVector = mediaKind(mediaType).icon
+
+/** Eigene Farbe je Medienart fuer den Platzhalter, wenn das Cover fehlt. */
+private fun mediaTypeColor(mediaType: String): IconColor = mediaKind(mediaType).color
+
+private class MediaKind(val icon: ImageVector, val color: IconColor)
+
 /**
  * Die Bibliothek liefert die Medienart als Freitext. Reihenfolge beachten:
  * "Hörbuch" und "Bilderbuch" enthalten "buch", "Konsolenspiel" enthaelt "spiel".
  */
-private fun mediaTypeIcon(mediaType: String): ImageVector {
+private fun mediaKind(mediaType: String): MediaKind {
     val t = mediaType.lowercase()
     return when {
-        "hörbuch" in t || "hoerbuch" in t -> Icons.Outlined.Headphones
-        "tonie" in t -> Icons.Outlined.Toys
-        "bilderbuch" in t -> Icons.Outlined.AutoStories
+        "hörbuch" in t || "hoerbuch" in t -> MediaKind(Icons.Outlined.Headphones, IconPalette.Lavender)
+        "tonie" in t -> MediaKind(Icons.Outlined.Toys, IconPalette.Coral)
+        "bilderbuch" in t -> MediaKind(Icons.Outlined.AutoStories, IconPalette.Lime)
         "konsole" in t || "videospiel" in t || "switch" in t || "playstation" in t ->
-            Icons.Outlined.SportsEsports
-        "spiel" in t -> Icons.Outlined.Extension
-        "dvd" in t || "blu-ray" in t || "film" in t -> Icons.Outlined.Movie
-        "cd" in t || "musik" in t -> Icons.Outlined.Album
-        "zeitschrift" in t || "zeitung" in t -> Icons.Outlined.Newspaper
-        "buch" in t || "roman" in t -> Icons.Outlined.MenuBook
-        else -> Icons.Outlined.Category
+            MediaKind(Icons.Outlined.SportsEsports, IconPalette.Ocean)
+        "spiel" in t -> MediaKind(Icons.Outlined.Extension, IconPalette.Mustard)
+        "dvd" in t || "blu-ray" in t || "film" in t -> MediaKind(Icons.Outlined.Movie, IconPalette.Plum)
+        "cd" in t || "musik" in t -> MediaKind(Icons.Outlined.Album, IconPalette.Raspberry)
+        "zeitschrift" in t || "zeitung" in t -> MediaKind(Icons.Outlined.Newspaper, IconPalette.Petrol)
+        "buch" in t || "roman" in t -> MediaKind(Icons.Outlined.MenuBook, IconPalette.Mint)
+        else -> MediaKind(Icons.Outlined.Category, IconPalette.GreyGreen)
     }
 }
 
@@ -1037,10 +1105,11 @@ private fun CollapsibleCard(
     count: Int? = null,
     subtitle: String? = null,
     subtitleColor: Color? = null,
+    iconColor: IconColor = IconPalette.Mint,
     contentPadding: PaddingValues = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    Card(Modifier.fillMaxWidth(), shape = LocalGroupShape.current ?: CardDefaults.shape) {
         Column {
             Row(
                 Modifier
@@ -1052,7 +1121,7 @@ private fun CollapsibleCard(
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ShapedIcon(icon, size = 40.dp)
+                ShapedIcon(icon, size = 40.dp, colors = iconColor)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1120,6 +1189,7 @@ private fun OpeningHoursCard(now: LocalDateTime, expanded: Boolean, onToggle: ()
     // Der Status der Hauptstelle steht schon in der Uebersicht - hier nur die Standorte.
     CollapsibleCard(
         icon = Icons.Outlined.LocalLibrary,
+        iconColor = IconPalette.Mint,
         title = "Öffnungszeiten",
         subtitle = OpeningHours.branches.joinToString(" · ") { it.shortName },
         expanded = expanded,
@@ -1138,7 +1208,7 @@ private fun OpeningHoursCard(now: LocalDateTime, expanded: Boolean, onToggle: ()
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            OpeningStatusLine(status, now, Modifier.padding(vertical = 8.dp))
+            OpeningStatusLine(status, now, Modifier.padding(vertical = 8.dp), stacked = true)
             // Sonntags hat keine Stelle offen - die Zeile wuerde nur Platz kosten.
             DayOfWeek.entries.filter { it != DayOfWeek.SUNDAY }.forEach { day ->
                 val isToday = day == now.dayOfWeek
@@ -1214,10 +1284,13 @@ private fun OpeningStatusLine(
     status: OpeningHours.Status,
     now: LocalDateTime,
     modifier: Modifier = Modifier,
+    stacked: Boolean = false,
 ) {
     val color = openingStatusColor(status)
     val label = OpeningHours.statusLabel(status)
     val detail = OpeningHours.statusDetail(status, now)
+    // stacked: Zeitpunkt immer unter dem Etikett (Oeffnungszeiten-Karte),
+    // sonst daneben und nur bei Platzmangel darunter (Uebersicht).
     FlowRow(
         modifier = modifier.semantics(mergeDescendants = true) {
             contentDescription = listOfNotNull(label, detail).joinToString(", ")
@@ -1225,6 +1298,7 @@ private fun OpeningStatusLine(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
         itemVerticalAlignment = Alignment.CenterVertically,
+        maxItemsInEachRow = if (stacked) 1 else Int.MAX_VALUE,
     ) {
         Row(
             Modifier
@@ -1340,6 +1414,7 @@ private fun WatchlistCard(
 
     CollapsibleCard(
         icon = Icons.Outlined.Bookmarks,
+        iconColor = IconPalette.Lavender,
         title = "Merkliste",
         count = count,
         expanded = expanded,

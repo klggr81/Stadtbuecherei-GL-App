@@ -111,6 +111,31 @@ private val DarkColors = darkColorScheme(
     surfaceContainerHighest = Color(0xFF303633),
 )
 
+/** Flaeche und Symbolfarbe eines [ShapedIcon]. */
+data class IconColor(val container: Color, val content: Color)
+
+/**
+ * Eigene, verspieltere Farben fuer die Symbol-Flaechen - jede Karte und jede
+ * Medienart hat ihre eigene. Ausgangspunkt ist eine Farbkarte des Nutzers
+ * (Limette, Himbeere, Graugruen, Mint), erweitert um sechs passende Farbtoene.
+ * Wie die Ampel bewusst unabhaengig vom Theme und von dynamischen Farben.
+ * Alle aus Tonal Palettes (HCT) mit gleicher Tonstufe: Flaeche Ton 45
+ * (Limette, Koralle, Senf 50), Symbol Ton 95 - mind. 3.5:1 zur hellen und
+ * 2.3:1 zur dunklen Karte, das Symbol mind. 3.9:1 zur Flaeche.
+ */
+object IconPalette {
+    val Lime = IconColor(Color(0xFF7E7A00), Color(0xFFFEF726))
+    val Raspberry = IconColor(Color(0xFFB4416C), Color(0xFFFFECEF))
+    val GreyGreen = IconColor(Color(0xFF5E6F60), Color(0xFFE3F6E3))
+    val Mint = IconColor(Color(0xFF427460), Color(0xFFC6FDE3))
+    val Coral = IconColor(Color(0xFFC6532F), Color(0xFFFFEDE8))
+    val Mustard = IconColor(Color(0xFF9D6E00), Color(0xFFFFEED9))
+    val Petrol = IconColor(Color(0xFF1A767D), Color(0xFFC8FAFF))
+    val Ocean = IconColor(Color(0xFF1A6DB5), Color(0xFFEAF1FF))
+    val Lavender = IconColor(Color(0xFF6E5FAD), Color(0xFFF4EEFF))
+    val Plum = IconColor(Color(0xFF925494), Color(0xFFFFEBFA))
+}
+
 /**
  * Ampelfarben fuer den Frist-Countdown - bewusst unabhaengig vom Theme-Akzent.
  * Die hellen Varianten erreichen mind. 4.5:1 (WCAG AA) auch auf der dunkelsten
