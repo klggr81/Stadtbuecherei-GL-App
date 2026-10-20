@@ -12,9 +12,9 @@ Frist abläuft.
 
 ## Screenshots
 
-| Übersicht (hell) | Übersicht (dunkel) | Öffnungszeiten | Einstellungen |
+| Übersicht (hell) | Ausleihen (dunkel) | Öffnungszeiten | Einstellungen |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/01-uebersicht-hell.jpg" width="200" alt="Übersicht mit nächster Rückgabe und den Karten mit farbigen Symbolen im hellen Design"> | <img src="docs/screenshots/02-uebersicht-dunkel.jpg" width="200" alt="Übersicht mit aufgeklappten Ausleihen im dunklen Design"> | <img src="docs/screenshots/03-oeffnungszeiten.jpg" width="200" alt="Öffnungszeiten der Standorte mit aktuellem Status"> | <img src="docs/screenshots/04-einstellungen.jpg" width="200" alt="Einstellungen für Erinnerungen, Bücherei und Darstellung"> |
+| <img src="docs/screenshots/uebersicht-hell.jpg" width="200" alt="Übersicht mit nächster Rückgabe und allen Karten mit farbigen Symbolen im hellen Design"> | <img src="docs/screenshots/ausleihen-dunkel.jpg" width="200" alt="Ausgeliehene Bücher mit Cover und Countdown im dunklen Design"> | <img src="docs/screenshots/oeffnungszeiten-dunkel.jpg" width="200" alt="Öffnungszeiten der Standorte mit aktuellem Status"> | <img src="docs/screenshots/einstellungen-hell.jpg" width="200" alt="Einstellungen für Erinnerungen, Bücherei und Darstellung"> |
 
 
 ## Installation

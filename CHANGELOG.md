@@ -17,6 +17,9 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 - Unverschlüsselte Verbindungen (http) sind in der App ausdrücklich gesperrt,
   auch auf Android 8, wo das System sie noch nicht von sich aus blockiert.
 
+### Dokumentation
+- Neue README-Screenshots, die die farbigen Symbole aller Karten zeigen.
+
 ## [1.10.3] - 2026-10-19
 
 ### Geändert
