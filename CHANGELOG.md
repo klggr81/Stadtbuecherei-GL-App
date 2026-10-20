@@ -7,6 +7,15 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+## [1.10.5] - 2026-10-20
+
+### Geändert
+- Die Anmeldung findet die Felder des Login-Formulars über ihre Namensendung
+  statt über feste Namen. Für die Stadtbücherei Bergisch Gladbach ändert sich
+  nichts; die Anmeldung ist aber robuster gegen Umbauten der Seite und ein
+  erster Schritt, die App auch für andere Bibliotheken mit OCLC OPEN nutzbar
+  zu machen.
+
 ## [1.10.4] - 2026-10-19
 
 ### Sicherheit
@@ -177,7 +186,8 @@ Erste veröffentlichte Version.
 - Mehrere Ausweise mit Konto-Umschalter.
 - Erinnerungen vor Fristende und Warnung vor Ausweisablauf.
 
-[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.4...HEAD
+[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.5...HEAD
+[1.10.5]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.4...v1.10.5
 [1.10.4]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.3...v1.10.4
 [1.10.3]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.2...v1.10.3
 [1.10.2]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.1...v1.10.2
