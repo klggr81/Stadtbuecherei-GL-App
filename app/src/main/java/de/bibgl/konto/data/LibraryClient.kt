@@ -56,6 +56,9 @@ class LibraryClient {
             "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Mobile Safari/537.36"
 
         // Feldnamen des Login-Formulars (DNN-Namenskonvention mit $-Trennern).
+        // Der vordere Teil haengt davon ab, wie die Seite eingerichtet ist (GL:
+        // "dnn$ctr$...", andere OPEN-Installationen z.B. "dnn$ctr361$..."). Gesucht
+        // wird deshalb ueber das Namensende; die festen Namen sind nur Rueckfall.
         private const val F_USER = "dnn\$ctr\$Login\$Login_COP\$txtUsername"
         private const val F_PASS = "dnn\$ctr\$Login\$Login_COP\$txtPassword"
         private const val F_SUBMIT = "dnn\$ctr\$Login\$Login_COP\$cmdLogin"
@@ -148,14 +151,18 @@ class LibraryClient {
 
     // ----------------------------------------------------------------- Login
 
+    /** Vollstaendiger Name eines Login-Feldes ("...Login_COP$<suffix>"), sonst [fallback]. */
+    private fun loginFieldName(doc: Document, suffix: String, fallback: String): String =
+        doc.selectFirst("[name\$='Login_COP\$$suffix']")?.attr("name")?.ifEmpty { null } ?: fallback
+
     /** Meldet an und liefert das vollstaendig gefuellte Konto zurueck. */
     suspend fun login(user: String, password: String): Account = withContext(Dispatchers.IO) {
         val loginPage = get(LOGIN_URL)
         val fields = hiddenFields(loginPage)
-        fields["__EVENTTARGET"] = F_SUBMIT
+        fields["__EVENTTARGET"] = loginFieldName(loginPage, "cmdLogin", F_SUBMIT)
         fields["__EVENTARGUMENT"] = ""
-        fields[F_USER] = user
-        fields[F_PASS] = password
+        fields[loginFieldName(loginPage, "txtUsername", F_USER)] = user
+        fields[loginFieldName(loginPage, "txtPassword", F_PASS)] = password
 
         val result = postForm(formAction(loginPage), fields, LOGIN_URL)
         if (!isLoggedIn(result)) throw LibraryException(loginError(result))
