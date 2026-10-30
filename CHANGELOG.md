@@ -7,6 +7,21 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+### Neu
+- Abholbereit, Vorgemerkt und Merkliste zeigen ihre Medien als Karten wie bei
+  den Ausleihen: mit Cover, Medienart, Titel und Verfasser. Antippen öffnet
+  den Titel im Katalog.
+- Die Ausweis-Karte zeigt die Ausweisnummer als Barcode (Code 39, wie auf dem
+  Ausweis gedruckt), zum Vorzeigen an Theke oder Selbstverbuchung.
+- Datenschutzerklärung, verlinkt im Anmeldebildschirm und unter „Über die App“;
+  dort steht jetzt auch das Impressum.
+
+### Geändert
+- Von der Merkliste entfernt man Titel jetzt über „Entfernen“ unten in der
+  Karte.
+- Die App ist auf Android 16 ausgerichtet (targetSdk 36), wie es Google Play
+  verlangt.
+
 ## [1.10.5] - 2026-10-20
 
 ### Geändert

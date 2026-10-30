@@ -20,6 +20,8 @@ import de.bibgl.konto.R
 
 private const val REPO_URL = "https://github.com/klggr81/Stadtbuecherei-GL-App"
 private const val CONTACT_EMAIL = "info@klggr.de"
+internal const val PRIVACY_URL ="$REPO_URL/blob/main/docs/DATENSCHUTZ.md"
+private const val IMPRINT_URL = "https://kollege-gruenfeld.de/impressum.php"
 
 @Composable
 fun AboutDialog(onDismiss: () -> Unit) {
@@ -43,6 +45,10 @@ fun AboutDialog(onDismiss: () -> Unit) {
                 AboutLink("Quellcode auf GitHub", REPO_URL, REPO_URL)
                 Spacer(Modifier.height(12.dp))
                 AboutLink("Kontakt", CONTACT_EMAIL, "mailto:$CONTACT_EMAIL")
+                Spacer(Modifier.height(12.dp))
+                AboutLink("Datenschutz", "Datenschutzerklärung", PRIVACY_URL)
+                Spacer(Modifier.height(12.dp))
+                AboutLink("Impressum", "kollege-gruenfeld.de", IMPRINT_URL)
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Schließen") } },

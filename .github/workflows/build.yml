@@ -86,8 +86,9 @@ jobs:
       - name: Gradle einrichten
         uses: gradle/actions/setup-gradle@v5
 
-      - name: APK bauen
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+      # Google Play nimmt nur App-Bundles (.aab), die Releases auf GitHub den APK.
+      - name: APK und App-Bundle bauen
+        run: ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace
 
       # Bei einem Tag zaehlt dessen Name, sonst die versionName aus dem Build -
       # sonst hiesse die Datei bei einem normalen Push "Stadtbuecherei-GL-App-main.apk".
@@ -101,7 +102,9 @@ jobs:
           fi
           NAME="Stadtbuecherei-GL-App-${VERSION}.apk"
           cp app/build/outputs/apk/release/app-release.apk "$NAME"
+          cp app/build/outputs/bundle/release/app-release.aab "${NAME%.apk}.aab"
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "bundle=${NAME%.apk}.aab" >> "$GITHUB_OUTPUT"
           echo "APK: $NAME"
 
       - name: APK als Artefakt hochladen
@@ -109,6 +112,15 @@ jobs:
         with:
           name: Stadtbuecherei-GL-App
           path: ${{ steps.apk.outputs.name }}
+          if-no-files-found: error
+
+      # Nur fuer den Upload in die Play Console - nicht im GitHub-Release, dort
+      # koennte niemand etwas damit anfangen.
+      - name: App-Bundle als Artefakt hochladen
+        uses: actions/upload-artifact@v5
+        with:
+          name: Stadtbuecherei-GL-App-Play
+          path: ${{ steps.apk.outputs.bundle }}
           if-no-files-found: error
 
       # Nur bei einem Tag wie v1.8.1: veroeffentlicht den APK als Release-Datei.

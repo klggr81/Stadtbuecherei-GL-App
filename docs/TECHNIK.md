@@ -148,3 +148,20 @@ vor dieser Regel und haben nur zwei Stellen.
 
 > Nur Release-Dateien sind ohne GitHub-Login herunterladbar. Die Artefakte eines
 > normalen Builds sind es nicht — deshalb der Umweg über Tags.
+
+### Google Play
+
+Jeder CI-Lauf baut neben dem APK ein App-Bundle (`.aab`), das Google Play
+verlangt. Es liegt als Artefakt `Stadtbuecherei-GL-App-Play` am Lauf und wird
+von Hand in die Play Console hochgeladen; in den GitHub-Release kommt es nicht.
+
+- **Signatur:** Beim ersten Upload unter „Play App Signing“ den vorhandenen
+  Schlüssel (`bibgl`) als App-Signaturschlüssel hochladen. Nur dann tragen
+  Play- und GitHub-Version dieselbe Signatur und lassen sich gegenseitig
+  aktualisieren. Die Wahl lässt sich später kaum ändern.
+- **targetSdk:** Play verlangt jedes Jahr ab 31. August ein höheres targetSdk
+  (2026: API 36). Ohne Anhebung nimmt die Play Console keine Updates mehr an.
+- **Datenschutz:** Die Erklärung steht in [`DATENSCHUTZ.md`](DATENSCHUTZ.md);
+  die App und der Store-Eintrag verlinken auf die Fassung im Branch `main`.
+  Kommen neue Netzwerkziele oder Daten hinzu, Erklärung und das Formular
+  „Datensicherheit“ in der Play Console anpassen.

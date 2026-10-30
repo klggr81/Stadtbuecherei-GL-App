@@ -65,9 +65,9 @@ Versionen sollten funktionieren, sind aber nicht ausprobiert.
 | **Countdown** | Farbige Ampel bis zur Rückgabe: rot überfällig, orange ≤ 2 Tage, gelb ≤ 7 Tage, grün ab 8 Tagen |
 | **Verlängern** | Einzeln oder alle verlängerbaren Medien auf einmal. Nicht verlängerbare Medien zeigen den Grund („Die maximale Anzahl der Verlängerungen ist erreicht.") |
 | **Gebühren** | Offene Gebühren, Einzahlungen, Saldo, Einzelposten |
-| **Vormerkungen** | Vorbestellte Medien und was gerade abholbereit ist |
-| **Merkliste** | Gemerkte Titel (bis zu 20, bei mehr ein Hinweis mit Link zur Website), Antippen öffnet die Detailseite, Entfernen per Lesezeichen-Symbol |
-| **Ausweis** | Eigene Karte mit Gültig-bis-Datum unter der Ausweisnummer, Warnung in der Übersicht ab 60 Tagen vor Ablauf, Benachrichtigung 30, 14 und 7 Tage vorher sowie am Ablauftag |
+| **Vormerkungen** | Vorbestellte Medien und was gerade abholbereit ist, als Karten mit Cover wie bei den Ausleihen |
+| **Merkliste** | Gemerkte Titel mit Cover, Verfasser und Medienart (bis zu 20, bei mehr ein Hinweis mit Link zur Website), Antippen öffnet die Detailseite, „Entfernen“ in jeder Karte |
+| **Ausweis** | Eigene Karte mit Gültig-bis-Datum und der Ausweisnummer als Barcode zum Vorzeigen, Warnung in der Übersicht ab 60 Tagen vor Ablauf, Benachrichtigung 30, 14 und 7 Tage vorher sowie am Ablauftag |
 | **Öffnungszeiten** | Zeiten aller drei Standorte; oben in der Übersicht, ob die gewählte Bücherei (Einstellungen, Standard: Forum) gerade geöffnet hat und bis wann (bestimmt beim Öffnen der App, gesetzliche Feiertage in NRW berücksichtigt). Die Karte nennt, auf welchem Stand die Zeiten sind |
 | **Aufklappbare Karten** | Jeder Bereich lässt sich auf- und zuklappen, die App merkt sich die Auswahl. Leere Karten (Abholbereit, Vorgemerkt, Merkliste) werden ausgeblendet – abschaltbar in den Einstellungen |
 | **Erinnerungen** | Täglicher Hintergrund-Check, Benachrichtigung einstellbar: 1–14 Tage vor Fristende. Alle Meldungen kommen frühestens um 9 Uhr, nie nachts |
@@ -93,6 +93,9 @@ Die App hat keinen Server und keine Analyse-Funktionen.
 
 Die einzigen weiteren Netzwerkzugriffe sind die Cover-Bilder, die die
 Bibliotheksseite selbst einbindet (u.a. von Amazon-Bildservern).
+
+Ausführlich: **[Datenschutzerklärung](docs/DATENSCHUTZ.md)** ·
+[Impressum](https://kollege-gruenfeld.de/impressum.php)
 
 ## Technische Details
 

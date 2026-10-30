@@ -7,14 +7,15 @@ plugins {
 
 android {
     namespace = "de.bibgl.konto"
-    // 37 verlangt material3 1.5 (Expressive). targetSdk bleibt bewusst 35 -
-    // ein hoeheres targetSdk aendert Laufzeitverhalten und waere ein eigener Schritt.
+    // 37 verlangt material3 1.5 (Expressive). targetSdk 36 verlangt Google Play
+    // seit 31.08.2026 fuer neue Apps und Updates. Ein hoeheres targetSdk aendert
+    // Laufzeitverhalten - vor jeder Anhebung im Emulator pruefen.
     compileSdk = 37
 
     defaultConfig {
         applicationId = "de.bibgl.konto"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 18
         versionName = "1.10.5"
     }

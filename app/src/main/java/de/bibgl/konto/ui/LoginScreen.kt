@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -56,6 +57,7 @@ fun LoginScreen(
     var user by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
+    val uriHandler = LocalUriHandler.current
 
     Column(
         modifier = modifier
@@ -172,6 +174,17 @@ fun LoginScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 32.dp),
+        )
+        // Vor der Anmeldung lesbar - die Daten gehen schon beim Anmelden raus,
+        // "Über die App" ist erst danach erreichbar.
+        TextButton(onClick = { runCatching { uriHandler.openUri(PRIVACY_URL) } }) {
+            Text("Datenschutzerklärung", style = MaterialTheme.typography.bodySmall)
+        }
+        Text(
+            "Inoffizielle App, nicht von der Stadtbücherei herausgegeben.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
     }
 }
