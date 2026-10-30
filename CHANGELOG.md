@@ -7,6 +7,8 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-30
+
 ### Neu
 - Abholbereit, Vorgemerkt und Merkliste zeigen ihre Medien als Karten wie bei
   den Ausleihen: mit Cover, Medienart, Titel und Verfasser. Antippen öffnet
@@ -17,8 +19,8 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
   dort steht jetzt auch das Impressum.
 
 ### Geändert
-- Von der Merkliste entfernt man Titel jetzt über „Entfernen“ unten in der
-  Karte.
+- Von der Merkliste entfernt man Titel jetzt über „Entfernen“ in der Karte
+  des Titels.
 - Die App ist auf Android 16 ausgerichtet (targetSdk 36), wie es Google Play
   verlangt.
 
@@ -201,7 +203,8 @@ Erste veröffentlichte Version.
 - Mehrere Ausweise mit Konto-Umschalter.
 - Erinnerungen vor Fristende und Warnung vor Ausweisablauf.
 
-[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.5...HEAD
+[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.5...v1.11.0
 [1.10.5]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.4...v1.10.5
 [1.10.4]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.3...v1.10.4
 [1.10.3]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.2...v1.10.3
