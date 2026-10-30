@@ -46,8 +46,23 @@ data class Loan(
         (daysLeft(today) ?: Long.MAX_VALUE) < 0
 }
 
-/** Generische Tabelle — fuer Vormerkungen, Abholbereit und Gebuehren, deren
- *  Spalten je nach Bestand variieren. */
+/**
+ * Ein Medium aus "Vorgemerkt" oder "Abholbereit". Die beiden Listen haben andere
+ * Spalten als die Ausleihen (und je nach Bestand auch untereinander), deshalb
+ * stehen alle uebrigen Spalten als Label/Wert-Paare in [details].
+ */
+@Serializable
+data class Medium(
+    val title: String,
+    val author: String = "",
+    val mediaType: String = "",
+    val coverUrl: String? = null,
+    val detailUrl: String? = null,
+    /** Weitere Spalten in Reihenfolge der Seite, z.B. "Zweigstelle" -> "Forum". */
+    val details: Map<String, String> = emptyMap(),
+)
+
+/** Generische Tabelle — fuer die Gebuehren, deren Spalten je nach Bestand variieren. */
 @Serializable
 data class Table(
     val headers: List<String> = emptyList(),
@@ -83,6 +98,10 @@ data class WatchItem(
     val mediaId: String = "",
     /** WebForms-Postback-Ziel des Links "von der Merkliste entfernen". */
     val removeTarget: String? = null,
+    val author: String = "",
+    /** Mediengruppe laut Katalog, z.B. "Kinder-/ Jugendbuch". */
+    val mediaType: String = "",
+    val coverUrl: String? = null,
 )
 
 /**
@@ -104,8 +123,11 @@ data class Account(
     val cardValidUntilRaw: String = "",
     val email: String = "",
     val loans: List<Loan> = emptyList(),
-    val reservations: Table = Table(),
-    val readyForPickup: Table = Table(),
+    // Bis 1.10.5 hiessen die Felder "reservations"/"readyForPickup" und waren
+    // Tabellen. Neue Namen, damit ein alter Zwischenstand lesbar bleibt - die
+    // beiden Listen fehlen dann nur bis zum naechsten Abruf.
+    val reservedMedia: List<Medium> = emptyList(),
+    val pickupMedia: List<Medium> = emptyList(),
     val watchlist: List<WatchItem> = emptyList(),
     /** Gesamtzahl der Merkliste; kann groesser sein als [watchlist]. Null = unbekannt. */
     val watchlistTotal: Int? = null,

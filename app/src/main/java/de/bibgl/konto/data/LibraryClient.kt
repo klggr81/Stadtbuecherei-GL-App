@@ -431,8 +431,8 @@ class LibraryClient {
                 ?: patron["Ausweis gültig bis"].orEmpty(),
             email = textIn(patronPanel, "LblEmailAddressData") ?: patron["E-Mail"].orEmpty(),
             loans = fetchRenewability(doc, parseLoans(doc)),
-            reservations = parseTable(doc, "table[id\$=grdViewReservations]"),
-            readyForPickup = parseTable(doc, "table[id\$=grdViewReadyForPickups]"),
+            reservedMedia = parseMediaTable(doc, "table[id\$=grdViewReservations]"),
+            pickupMedia = parseMediaTable(doc, "table[id\$=grdViewReadyForPickups]"),
             watchlist = parseWatchlist(doc),
             watchlistTotal = watchlistTotal(doc),
             fees = parseFees(doc),
@@ -484,9 +484,10 @@ class LibraryClient {
      * Cover-URLs stecken im Attribut data-sources, Aufbau:
      * "SetSimpleCover|a|<bild>|a|<shoplink>|c|SetSimpleCover|a|<bild2>|a|..."
      * Gesucht ist die erste echte Bild-URL, also jeweils Index 1 eines Abschnitts.
+     * In den Tabellen hat das Bild die Klasse coverSmall, in der Merkliste nicht.
      */
     private fun coverOf(row: Element): String? {
-        val sources = row.selectFirst("img.coverSmall")?.attr("data-sources").orEmpty()
+        val sources = row.selectFirst("img[data-sources]")?.attr("data-sources").orEmpty()
         if (sources.isEmpty()) return null
         return sources.split("|c|")
             .mapNotNull { it.split("|a|").getOrNull(1) }
@@ -503,6 +504,44 @@ class LibraryClient {
             .map { tr -> tr.children().map { cellText(it) } }
             .filter { row -> row.any { it.isNotBlank() } }
         return Table(headers, data)
+    }
+
+    /**
+     * Vormerkungen und Abholbereit. Die Spalten werden ueber ihre Ueberschrift
+     * zugeordnet statt ueber die Position wie bei den Ausleihen - die beiden
+     * Tabellen sind anders aufgebaut und die App kann sie ohne Vormerkung nicht
+     * pruefen. Was keine Titel-, Verfasser- oder Medienart-Spalte ist, landet in
+     * [Medium.details].
+     */
+    private fun parseMediaTable(doc: Document, selector: String): List<Medium> {
+        val table = doc.selectFirst(selector) ?: return emptyList()
+        if (table.text().contains("Keine Daten vorhanden")) return emptyList()
+        val rows = table.select("tr")
+        if (rows.isEmpty()) return emptyList()
+        val headers = rows[0].select("th, td").map { cellText(it) }
+        return rows.drop(1).mapNotNull { tr ->
+            val cells = headers.zip(tr.children().map { cellText(it) })
+                .filter { (h, v) -> h.isNotBlank() && v.isNotBlank() && !h.equals("Cover", true) }
+            if (cells.isEmpty()) return@mapNotNull null
+            val titleLink = tr.selectFirst("a[id*=lnkTitle]")
+            fun column(vararg names: String) =
+                cells.firstOrNull { (h, _) -> names.any { h.contains(it, ignoreCase = true) } }
+            val titleCell = column("Titel")
+            val authorCell = column("Verfasser", "Autor")
+            val typeCell = column("Medienart", "Mediengruppe", "Medientyp")
+            val title = titleLink?.text()?.trim()?.ifEmpty { null }
+                ?: titleCell?.second ?: cells.first().second
+            Medium(
+                title = title,
+                author = authorCell?.second.orEmpty(),
+                mediaType = typeCell?.second.orEmpty(),
+                coverUrl = coverOf(tr),
+                detailUrl = titleLink?.absUrl("href")?.ifEmpty { null },
+                details = (cells - listOfNotNull(titleCell, authorCell, typeCell).toSet())
+                    .filter { (_, v) -> v != title }
+                    .toMap(),
+            )
+        }
     }
 
     /**
@@ -552,6 +591,7 @@ class LibraryClient {
     /**
      * Jeder Eintrag steckt in einem "..._mdv<Mediennummer>_divMedium" mit Titel-Link,
      * verstecktem Feld "mednr" und dem Postback-Link "von der Merkliste entfernen".
+     * Cover, Verfasser und Mediengruppe sind aufgebaut wie in der Katalogsuche.
      * Gelesen wird nur die erste Seite der Merkliste ([WATCHLIST_PAGE_SIZE] Eintraege).
      */
     private fun parseWatchlist(doc: Document): List<WatchItem> {
@@ -567,6 +607,9 @@ class LibraryClient {
                 mediaId = entry.selectFirst("input[name\$='\$mednr']")?.attr("value").orEmpty(),
                 removeTarget = entry.selectFirst("a[id\$=LbtnWatchlist]")?.attr("href")
                     ?.let { POSTBACK_RE.find(it)?.groupValues?.get(1) },
+                author = entry.select("span.author").joinToString("; ") { it.text().trim() },
+                mediaType = entry.selectFirst("[id\$=spanMediaGrpValue]")?.text()?.trim().orEmpty(),
+                coverUrl = coverOf(entry),
             )
         }
         if (entries.isNotEmpty()) return entries

@@ -110,8 +110,8 @@ import coil.compose.AsyncImage
 import de.bibgl.konto.data.Account
 import de.bibgl.konto.data.LibraryClient
 import de.bibgl.konto.data.Loan
+import de.bibgl.konto.data.Medium
 import de.bibgl.konto.data.OpeningHours
-import de.bibgl.konto.data.Table
 import de.bibgl.konto.data.WatchItem
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -352,6 +352,8 @@ private fun AccountContent(
 ) {
     val today = LocalDate.now()
     val loans = account.loansByDueDate
+    val pickup = account.pickupMedia
+    val reserved = account.reservedMedia
     val now = rememberNow()
 
     // Jede Karte merkt sich, ob sie auf- oder zugeklappt ist. Solange der Nutzer
@@ -366,9 +368,9 @@ private fun AccountContent(
 
     // Sichtbare Karten der Gruppe in Reihenfolge - fuer die Ecken (aussen/innen).
     val groupKeys = buildList {
-        if (showEmpty || !account.readyForPickup.isEmpty) add(S_PICKUP)
+        if (showEmpty || pickup.isNotEmpty()) add(S_PICKUP)
         add(S_LOANS)
-        if (showEmpty || !account.reservations.isEmpty) add(S_RESERVATIONS)
+        if (showEmpty || reserved.isNotEmpty()) add(S_RESERVATIONS)
         if (showEmpty || account.watchlist.isNotEmpty()) add(S_WATCHLIST)
         add(S_FEES)
         add(S_HOURS)
@@ -392,20 +394,24 @@ private fun AccountContent(
             }
         }
 
-        if (showEmpty || !account.readyForPickup.isEmpty) {
+        if (showEmpty || pickup.isNotEmpty()) {
             item(key = S_PICKUP) {
                 GroupItem(shapeFor(S_PICKUP)) {
                     CollapsibleCard(
                         icon = Icons.Outlined.Inventory2,
                         iconColor = IconPalette.Lime,
                         title = "Abholbereit",
-                        count = account.readyForPickup.rows.size,
+                        count = pickup.size,
                         // Leer startet die Karte zugeklappt - sie wuerde nur Platz kosten.
-                        expanded = expanded(S_PICKUP, !account.readyForPickup.isEmpty),
-                        onToggle = toggle(S_PICKUP, !account.readyForPickup.isEmpty),
+                        expanded = expanded(S_PICKUP, pickup.isNotEmpty()),
+                        onToggle = toggle(S_PICKUP, pickup.isNotEmpty()),
+                        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 8.dp),
                     ) {
-                        if (account.readyForPickup.isEmpty) EmptyText("Nichts abholbereit")
-                        else TableContent(account.readyForPickup)
+                        if (pickup.isEmpty()) {
+                            EmptyText("Nichts abholbereit", Modifier.padding(horizontal = 8.dp))
+                        } else {
+                            MediumList(pickup)
+                        }
                     }
                 }
             }
@@ -455,19 +461,23 @@ private fun AccountContent(
             }
         }
 
-        if (showEmpty || !account.reservations.isEmpty) {
+        if (showEmpty || reserved.isNotEmpty()) {
             item(key = S_RESERVATIONS) {
                 GroupItem(shapeFor(S_RESERVATIONS)) {
                     CollapsibleCard(
                         icon = Icons.Outlined.Schedule,
                         iconColor = IconPalette.Ocean,
                         title = "Vorgemerkt",
-                        count = account.reservations.rows.size,
-                        expanded = expanded(S_RESERVATIONS, !account.reservations.isEmpty),
-                        onToggle = toggle(S_RESERVATIONS, !account.reservations.isEmpty),
+                        count = reserved.size,
+                        expanded = expanded(S_RESERVATIONS, reserved.isNotEmpty()),
+                        onToggle = toggle(S_RESERVATIONS, reserved.isNotEmpty()),
+                        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 8.dp),
                     ) {
-                        if (account.reservations.isEmpty) EmptyText("Keine Vormerkungen")
-                        else TableContent(account.reservations)
+                        if (reserved.isEmpty()) {
+                            EmptyText("Keine Vormerkungen", Modifier.padding(horizontal = 8.dp))
+                        } else {
+                            MediumList(reserved)
+                        }
                     }
                 }
             }
@@ -704,6 +714,9 @@ private fun LibraryCardCard(
                 modifier = Modifier.padding(top = 4.dp),
             )
         }
+        if (account.cardNumber.isNotBlank()) {
+            Code39Barcode(account.cardNumber, Modifier.padding(top = 12.dp))
+        }
     }
 }
 
@@ -881,13 +894,68 @@ private fun Stat(
 
 @Composable
 private fun LoanCard(loan: Loan, today: LocalDate, busy: Boolean, onRenew: () -> Unit) {
+    MediumCard(
+        title = loan.title,
+        author = loan.author,
+        mediaType = loan.mediaType,
+        coverUrl = loan.coverUrl,
+        detailUrl = loan.detailUrl,
+        footer = { RenewRow(loan, busy, onRenew) },
+    ) {
+        Spacer(Modifier.height(6.dp))
+        CountdownChip(loan, today)
+        Text(
+            "Frist ${loan.dueDateRaw}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+    }
+}
+
+/** Vorgemerkt und Abholbereit: Karte wie bei den Ausleihen, darunter die uebrigen Spalten. */
+@Composable
+private fun ReservedMediumCard(medium: Medium) {
+    MediumCard(
+        title = medium.title,
+        author = medium.author,
+        mediaType = medium.mediaType,
+        coverUrl = medium.coverUrl,
+        detailUrl = medium.detailUrl,
+    ) {
+        if (medium.details.isNotEmpty()) Spacer(Modifier.height(6.dp))
+        medium.details.forEach { (label, value) ->
+            Text(
+                "$label: $value",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/**
+ * Gemeinsames Kartenlayout aller Medienlisten: Cover links, daneben Medienart,
+ * Titel und Verfasser, darunter [content]. [footer] laeuft ueber die volle
+ * Breite (z.B. Verlaengern). Antippen oeffnet die Detailseite im Katalog.
+ */
+@Composable
+private fun MediumCard(
+    title: String,
+    author: String,
+    mediaType: String,
+    coverUrl: String?,
+    detailUrl: String?,
+    footer: (@Composable () -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit = {},
+) {
     val uriHandler = LocalUriHandler.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .then(
-                if (loan.detailUrl != null) {
-                    Modifier.clickable { uriHandler.openUri(loan.detailUrl) }
+                if (detailUrl != null) {
+                    Modifier.clickable { uriHandler.openUri(detailUrl) }
                 } else Modifier
             ),
         colors = CardDefaults.cardColors(
@@ -896,39 +964,35 @@ private fun LoanCard(loan: Loan, today: LocalDate, busy: Boolean, onRenew: () ->
     ) {
         Column(Modifier.padding(12.dp)) {
             Row {
-                Cover(loan)
+                Cover(coverUrl, mediaType)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    if (loan.mediaType.isNotBlank()) {
-                        MediaTypeLabel(loan.mediaType)
+                    if (mediaType.isNotBlank()) {
+                        MediaTypeLabel(mediaType)
                         Spacer(Modifier.height(2.dp))
                     }
                     Text(
-                        loan.title,
+                        title,
                         style = MaterialTheme.typography.titleSmall,
                         maxLines = 3,
                     )
-                    if (loan.author.isNotBlank()) {
+                    if (author.isNotBlank()) {
                         Text(
-                            loan.author,
+                            author,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    Spacer(Modifier.height(6.dp))
-                    CountdownChip(loan, today)
-                    Text(
-                        "Frist ${loan.dueDateRaw}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
+                    content()
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
-            RenewRow(loan, busy, onRenew)
+            if (footer != null) {
+                Spacer(Modifier.height(8.dp))
+                footer()
+            }
         }
     }
 }
@@ -940,8 +1004,8 @@ private fun LoanCard(loan: Loan, today: LocalDate, busy: Boolean, onRenew: () ->
  * eines grauen Kastens. Andere Bildquellen werden bewusst nicht abgefragt.
  */
 @Composable
-private fun Cover(loan: Loan) {
-    var missing by remember(loan.coverUrl) { mutableStateOf(loan.coverUrl == null) }
+private fun Cover(coverUrl: String?, mediaType: String) {
+    var missing by remember(coverUrl) { mutableStateOf(coverUrl == null) }
     Box(
         Modifier
             .size(width = 54.dp, height = 78.dp)
@@ -950,10 +1014,10 @@ private fun Cover(loan: Loan) {
         contentAlignment = Alignment.Center,
     ) {
         if (missing) {
-            ShapedIcon(mediaTypeIcon(loan.mediaType), size = 40.dp, colors = mediaTypeColor(loan.mediaType))
+            ShapedIcon(mediaTypeIcon(mediaType), size = 40.dp, colors = mediaTypeColor(mediaType))
         } else {
             AsyncImage(
-                model = loan.coverUrl,
+                model = coverUrl,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 onSuccess = { state ->
@@ -1365,22 +1429,11 @@ private fun KeyValue(label: String, value: String, highlight: Boolean = false) {
     }
 }
 
-/**
- * Vormerkungen und Abholbereit haben je nach Bestand andere Spalten, deshalb
- * werden sie generisch als Label/Wert-Paare gezeigt statt als feste Tabelle.
- */
+/** Vorgemerkt und Abholbereit als Karten untereinander, wie die Ausleihen. */
 @Composable
-private fun TableContent(table: Table) {
-    table.asMaps().forEachIndexed { index, row ->
-        if (index > 0) {
-            Spacer(Modifier.height(8.dp))
-            HorizontalDivider()
-            Spacer(Modifier.height(8.dp))
-        }
-        row.forEach { (k, v) ->
-            if (k.equals("Cover", true) || k.isBlank()) return@forEach
-            KeyValue(k, v)
-        }
+private fun MediumList(media: List<Medium>) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        media.forEach { ReservedMediumCard(it) }
     }
 }
 
@@ -1419,33 +1472,23 @@ private fun WatchlistCard(
         count = count,
         expanded = expanded,
         onToggle = onToggle,
-        contentPadding = PaddingValues(start = 16.dp, end = 4.dp, bottom = 8.dp),
+        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 8.dp),
     ) {
-        if (items.isEmpty()) EmptyText("Die Merkliste ist leer")
-        items.forEach { item ->
-            val url = item.url
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    item.title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .weight(1f)
-                        .then(
-                            if (url != null) Modifier.clickable { uriHandler.openUri(url) }
-                            else Modifier
-                        )
-                        .padding(vertical = 6.dp),
-                )
-                if (item.mediaId in removing) {
-                    Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                    }
-                } else if (item.removeTarget != null && item.mediaId.isNotEmpty()) {
-                    IconButton(onClick = { confirm = item }) {
-                        Icon(
-                            Icons.Outlined.BookmarkRemove,
-                            contentDescription = "${item.title} von der Merkliste entfernen",
-                        )
+        if (items.isEmpty()) EmptyText("Die Merkliste ist leer", Modifier.padding(horizontal = 8.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items.forEach { item ->
+                val canRemove = item.removeTarget != null && item.mediaId.isNotEmpty()
+                MediumCard(
+                    title = item.title,
+                    author = item.author,
+                    mediaType = item.mediaType,
+                    coverUrl = item.coverUrl,
+                    detailUrl = item.url,
+                ) {
+                    // Neben dem Cover ist Platz - eine eigene Zeile darunter machte
+                    // die Karten nur hoeher.
+                    if (canRemove || item.mediaId in removing) {
+                        WatchRemoveRow(item, item.mediaId in removing) { confirm = item }
                     }
                 }
             }
@@ -1461,7 +1504,7 @@ private fun WatchlistCard(
             color = if (truncated) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .padding(end = 12.dp)
+                .padding(horizontal = 8.dp)
                 .then(
                     if (truncated) {
                         Modifier.clickable { uriHandler.openUri(LibraryClient.ACCOUNT_URL) }
@@ -1469,6 +1512,29 @@ private fun WatchlistCard(
                 )
                 .padding(top = 8.dp, bottom = 8.dp),
         )
+    }
+}
+
+/** Fusszeile einer Merklisten-Karte, aufgebaut wie "Verlängern" bei den Ausleihen. */
+@Composable
+private fun WatchRemoveRow(item: WatchItem, busy: Boolean, onRemove: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+        TextButton(
+            onClick = onRemove,
+            enabled = !busy,
+            shapes = ButtonDefaults.shapes(),
+            modifier = Modifier.semantics {
+                contentDescription = "${item.title} von der Merkliste entfernen"
+            },
+        ) {
+            if (busy) {
+                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+            } else {
+                Icon(Icons.Outlined.BookmarkRemove, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Entfernen")
+            }
+        }
     }
 }
 
