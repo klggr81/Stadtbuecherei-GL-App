@@ -7,6 +7,19 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+### Geändert
+- Erinnerungen sind jetzt kurz und auf einen Blick lesbar: wie dringend und wie
+  viele Medien (z.B. „Rückgabe morgen · 2 Medien“), beim Ausweis mit Vornamen
+  („Erikas Ausweis läuft ab · in 14 Tagen“), damit bei mehreren Ausweisen klar
+  ist, wessen gemeint ist. Bei einem Medium steht sein Titel da, bei mehreren
+  aufgeklappt alle Titel mit Frist („morgen: …“). Wer auf dem Sperrbildschirm
+  vertrauliche Inhalte ausblendet, sieht dort keine Buchtitel.
+- Die Warnung vor dem Ablauf des Ausweises hat einen eigenen
+  Benachrichtigungskanal „Ausweis-Ablauf“ und lässt sich in den
+  Android-Einstellungen getrennt von den Rückgabe-Erinnerungen abschalten.
+- Erinnerungen gelten für Android als Erinnerung (z.B. im Nicht-stören-Modus)
+  und klingeln nicht erneut, wenn sie nur aktualisiert werden.
+
 ## [1.11.0] - 2026-10-30
 
 ### Neu

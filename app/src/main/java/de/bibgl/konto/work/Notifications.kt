@@ -18,7 +18,9 @@ import kotlin.math.absoluteValue
 
 object Notifications {
 
+    // Kanal-IDs sind in den Android-Einstellungen des Nutzers gespeichert - nicht umbenennen.
     private const val CHANNEL_DUE = "due_dates"
+    private const val CHANNEL_CARD = "card_expiry"
 
     // Jedes Profil bekommt eigene Meldungen, damit sie sich nicht gegenseitig
     // ueberschreiben. Die ID leitet sich stabil aus der Profil-ID ab.
@@ -28,16 +30,30 @@ object Notifications {
     private fun notificationId(base: Int, profileId: String): Int =
         base + (profileId.hashCode().absoluteValue % 100_000)
 
+    /**
+     * Fristen und Ausweisablauf in getrennten Kanaelen, damit sich beides in den
+     * Android-Einstellungen einzeln abschalten laesst. Bis 1.11.0 lief die
+     * Ausweis-Warnung mit im Kanal der Rueckgabe-Erinnerungen.
+     */
     fun createChannel(context: Context) {
-        val channel = NotificationChannel(
-            CHANNEL_DUE,
-            "Rückgabe-Erinnerungen",
-            NotificationManager.IMPORTANCE_DEFAULT,
-        ).apply {
-            description = "Erinnert, bevor Medien der Stadtbücherei fällig werden."
-        }
+        val channels = listOf(
+            NotificationChannel(
+                CHANNEL_DUE,
+                "Rückgabe-Erinnerungen",
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                description = "Erinnert, bevor Medien der Stadtbücherei fällig werden."
+            },
+            NotificationChannel(
+                CHANNEL_CARD,
+                "Ausweis-Ablauf",
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                description = "Warnt, bevor ein Bibliotheksausweis abläuft."
+            },
+        )
         context.getSystemService(NotificationManager::class.java)
-            ?.createNotificationChannel(channel)
+            ?.createNotificationChannels(channels)
     }
 
     private fun canNotify(context: Context): Boolean =
@@ -74,36 +90,50 @@ object Notifications {
             .sortedBy { it.daysLeft(today) ?: Long.MAX_VALUE }
         if (relevant.isEmpty() || !canNotify(context)) return false
 
-        val overdue = relevant.filter { it.isOverdue(today) }
-        val core = when {
-            overdue.isNotEmpty() -> "${overdue.size} ${mediaWord(overdue.size)} überfällig"
-            relevant.size == 1 -> "Rückgabe ${dueLabel(relevant[0], today)}"
-            else -> "${relevant.size} Medien bald fällig"
-        }
+        // Bewusst knapp: oben wie dringend (nach dem dringendsten Medium), darunter
+        // bei einem Medium dessen Titel, bei mehreren die Anzahl. Aufgeklappt
+        // stehen dann alle Titel da, je mit Frist vorn, weil Android jede Zeile
+        // hinten abschneidet.
+        val core = "Rückgabe ${dueLabel(relevant.first(), today)}"
         val title = if (showProfile) "${profile.label}: $core" else core
 
-        val lines = relevant.map { loan ->
-            val renew = when (loan.renewable) {
-                true -> " · verlängerbar"
-                false -> " · nicht verlängerbar"
-                null -> ""
+        val overdue = relevant.count { it.isOverdue(today) }
+        val dueSoon = relevant.size - overdue
+        val count = if (overdue > 0 && dueSoon > 0) {
+            "$overdue überfällig, $dueSoon bald fällig"
+        } else {
+            "${relevant.size} ${mediaWord(relevant.size)}"
+        }
+        // Bei einem Medium gleich der Titel - "1 Medium" sagt nichts.
+        val text = if (relevant.size == 1) relevant.first().title else count
+
+        val style: NotificationCompat.Style = if (relevant.size == 1) {
+            NotificationCompat.BigTextStyle().bigText(relevant.first().title)
+        } else {
+            NotificationCompat.InboxStyle().also { inbox ->
+                relevant.take(6).forEach { inbox.addLine("${lineLabel(it, today)}: ${it.title}") }
+                if (relevant.size > 6) inbox.addLine("+ ${relevant.size - 6} weitere")
             }
-            "${loan.title} — ${dueLabel(loan, today)}$renew"
         }
 
-        val style = NotificationCompat.InboxStyle().setBigContentTitle(title)
-        lines.take(6).forEach(style::addLine)
-        if (lines.size > 6) style.setSummaryText("+ ${lines.size - 6} weitere")
-
-        val notification = NotificationCompat.Builder(context, CHANNEL_DUE)
+        fun builder(text: String) = NotificationCompat.Builder(context, CHANNEL_DUE)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
-            .setContentText(lines.first())
-            .setStyle(style)
+            .setContentText(text)
             .setColor(ContextCompat.getColor(context, R.color.accent))
             .setContentIntent(openAppIntent(context, profile.id))
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            // Ersetzt eine neue Meldung die vom Vortag, soll es nicht erneut piepen.
+            .setOnlyAlertOnce(true)
+
+        // Buchtitel sind persoenlich: Hat der Nutzer "vertrauliche Inhalte" auf dem
+        // Sperrbildschirm ausgeblendet, zeigt Android dort die Fassung ohne Titel.
+        val notification = builder(text)
+            .setStyle(style)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(builder(count).build())
             .build()
 
         NotificationManagerCompat.from(context)
@@ -114,45 +144,70 @@ object Notifications {
     /**
      * Warnt, dass ein Bibliotheksausweis bald oder heute ablaeuft. An welchen
      * Tagen das geschieht, entscheidet der Worker. Liefert true, wenn gewarnt wurde.
+     *
+     * Der Vorname steht immer dabei, damit klar ist, wessen Ausweis es ist -
+     * auch wenn mehrere Ausweise (Familie) hinterlegt sind.
      */
     fun notifyCardExpiry(
         context: Context,
         profile: Profile,
         account: Account,
-        showProfile: Boolean,
     ): Boolean {
         val days = account.cardDaysLeft() ?: return false
         if (days < 0 || !canNotify(context)) return false
-        val who = if (showProfile) "Der Ausweis von ${profile.label}" else "Dein Bibliotheksausweis"
-        val text = if (days == 0L) {
-            "$who läuft heute ab (${account.cardValidUntilRaw})."
-        } else {
-            "$who läuft in $days ${dayWord(days)} ab (${account.cardValidUntilRaw})."
-        }
-        val notification = NotificationCompat.Builder(context, CHANNEL_DUE)
+        // "Erikas Ausweis läuft ab", die Frist darunter: Ein ganzer Satz im Titel
+        // wuerde abgeschnitten, weil Android die Uhrzeit mit in die Zeile setzt.
+        // Das genaue Datum steht in der Ausweis-Karte der App.
+        val who = firstName(account) ?: profile.label
+        val notification = NotificationCompat.Builder(context, CHANNEL_CARD)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(if (showProfile) "${profile.label}: Ausweis läuft ab" else "Ausweis läuft ab")
-            .setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentTitle("${genitive(who)} Ausweis läuft ab")
+            .setContentText(if (days == 0L) "heute" else "in $days ${dayWord(days)}")
             .setColor(ContextCompat.getColor(context, R.color.accent))
             .setContentIntent(openAppIntent(context, profile.id))
             .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setOnlyAlertOnce(true)
             .build()
         NotificationManagerCompat.from(context)
             .notify(notificationId(BASE_CARD, profile.id), notification)
         return true
     }
 
+    /** Frist fuer den Titel: "Rückgabe heute", "Rückgabe in 3 Tagen", "Rückgabe überfällig". */
     private fun dueLabel(loan: Loan, today: LocalDate): String {
         val d = loan.daysLeft(today) ?: return "ohne Frist"
         return when {
-            d == 0L -> "heute fällig"
-            d == 1L -> "morgen fällig"
-            d > 1L -> "in $d Tagen"
-            d == -1L -> "seit gestern überfällig"
-            else -> "seit ${-d} Tagen überfällig"
+            d < 0L -> "überfällig"
+            d == 0L -> "heute"
+            d == 1L -> "morgen"
+            else -> "in $d Tagen"
         }
     }
+
+    /** Kurze Frist fuer den Anfang einer Zeile, z.B. "heute" oder "2 Tage überfällig". */
+    private fun lineLabel(loan: Loan, today: LocalDate): String {
+        val d = loan.daysLeft(today) ?: return "ohne Frist"
+        return when {
+            d == 0L -> "heute"
+            d == 1L -> "morgen"
+            d > 1L -> "in $d Tagen"
+            d == -1L -> "1 Tag überfällig"
+            else -> "${-d} Tage überfällig"
+        }
+    }
+
+    /**
+     * Vorname aus dem Namen der Bibliothek ("Mustermann, Erika" -> "Erika").
+     * Null, wenn der Name fehlt oder anders aufgebaut ist - dann gilt der
+     * Kontoname aus der App.
+     */
+    private fun firstName(account: Account): String? =
+        account.patronName.substringAfter(",", "").trim().ifEmpty { null }
+
+    /** "Erika" -> "Erikas", "Jonas" -> "Jonas’" (Apostroph nach s, ß, x, z). */
+    private fun genitive(name: String): String =
+        if (name.last().lowercaseChar() in "sßxz") "$name’" else "${name}s"
 
     private fun dayWord(n: Long) = if (n == 1L) "Tag" else "Tagen"
 

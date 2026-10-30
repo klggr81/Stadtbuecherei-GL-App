@@ -69,9 +69,7 @@ class DueDateWorker(
             val until = account.cardValidUntilRaw
             val stage = account.cardDaysLeft()?.let { cardReminderStage(it) }
             if (stage != null && store.cardReminderStage(profile.id, until) != stage) {
-                val notified = Notifications.notifyCardExpiry(
-                    applicationContext, profile, account, showProfile,
-                )
+                val notified = Notifications.notifyCardExpiry(applicationContext, profile, account)
                 if (notified) store.setCardReminderStage(profile.id, until, stage)
             }
 
