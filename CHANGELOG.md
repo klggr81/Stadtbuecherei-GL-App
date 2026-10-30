@@ -7,6 +7,8 @@ Versionen nur zwei Stellen, ab 1.8.1 immer drei.
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-10-30
+
 ### Geändert
 - Erinnerungen sind jetzt kurz und auf einen Blick lesbar: wie dringend und wie
   viele Medien (z.B. „Rückgabe morgen · 2 Medien“), beim Ausweis mit Vornamen
@@ -216,7 +218,8 @@ Erste veröffentlichte Version.
 - Mehrere Ausweise mit Konto-Umschalter.
 - Erinnerungen vor Fristende und Warnung vor Ausweisablauf.
 
-[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.11.1...HEAD
+[1.11.1]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.5...v1.11.0
 [1.10.5]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.4...v1.10.5
 [1.10.4]: https://github.com/klggr81/Stadtbuecherei-GL-App/compare/v1.10.3...v1.10.4
